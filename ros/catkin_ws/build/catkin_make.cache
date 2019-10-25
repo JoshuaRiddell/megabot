@@ -1,0 +1,2 @@
+madbot_description:madbot_gazebo
+-DCATKIN_DEVEL_PREFIX=/home/josh/megabot/ros/catkin_ws/devel -DCMAKE_INSTALL_PREFIX=/home/josh/megabot/ros/catkin_ws/install -G Unix Makefiles
