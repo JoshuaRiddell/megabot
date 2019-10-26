@@ -33,7 +33,22 @@
     <mu1>10</mu1>
     <mu2>10</mu2>
     <material>Gazebo/Green</material>
-    <dampingFactor>0.0001</dampingFactor>
+    <dampingFactor>0.00001</dampingFactor>
+
+    <collision>
+      <surface>
+        <bounce>
+          <restitution_coefficient>0.3</restitution_coefficient>
+          <threshold>0</threshold>
+        </bounce>
+        <contact>
+          <ode>
+            <max_vel>10</max_vel>
+          </ode>
+        </contact>
+      </surface>
+    </collision>
+
   </gazebo>
 
 </robot>

@@ -7,11 +7,12 @@
       <static>true</static>
 
       <link name="body">
-
         <collision name="collision">
+
           <geometry>
             <mesh><uri>model://megabot_arena/meshes/arena.dae</uri></mesh>
           </geometry>
+
         </collision>
 
         <visual name="visual">
