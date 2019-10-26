@@ -1,4 +1,4 @@
-<?xml version="1.0"?>
+<?xml version="0.46"?>
 
 <robot name="test_model">
 
@@ -29,13 +29,13 @@
     </inertial>
     <visual>
       <geometry>
-        <box size="1.0 1.0 1.0" /> <!-- does not need to match collision -->
+        <box size="0.46 0.46 0.46" /> <!-- does not need to match collision -->
       </geometry>
     </visual>
     <collision>
       <origin xyz="0 0 0" />
       <geometry>
-        <box size="1.0 1.0 1.0" />
+        <box size="0.46 0.46 0.46" />
       </geometry>
     </collision>
   </link>

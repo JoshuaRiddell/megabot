@@ -9,10 +9,10 @@
     <arg name="debug" value="false"/>
   </include>
 
-  <node name="spawn_megabot" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/megabot.urdf -urdf -z 0 -model megabot" />
+  <node name="spawn_megabot" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/megabot.urdf -urdf -z 0.01 -model megabot" />
 
-  <node name="spawn_ball_1" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0 -x 1 -model ball_1" />
-  <node name="spawn_ball_2" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0 -x 1.5 -model ball_2" />
-  <node name="spawn_ball_3" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0 -x 2 -model ball_3" />
-  
+  <node name="spawn_ball_1" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0 -y -0.5 -model ball_left" />
+  <node name="spawn_ball_2" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0 -y 0 -model ball_middle" />
+  <node name="spawn_ball_3" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0 -y 0.5 -model ball_right" />
+
 </launch>

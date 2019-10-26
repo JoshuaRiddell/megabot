@@ -9,6 +9,10 @@
     <include>
       <uri>model://ground_plane</uri>
     </include>
-    
+
+    <include>
+      <uri>model://megabot_arena</uri>
+    </include>
+
   </world>
 </sdf>
