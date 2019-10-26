@@ -348,6 +348,18 @@ madbot_gazebo_BINARY_DIR:STATIC=/home/josh/megabot/ros/catkin_ws/build/madbot_ga
 //Value Computed by CMake
 madbot_gazebo_SOURCE_DIR:STATIC=/home/josh/megabot/ros/catkin_ws/src/madbot_gazebo
 
+//Value Computed by CMake
+megabot_description_BINARY_DIR:STATIC=/home/josh/megabot/ros/catkin_ws/build/megabot_description
+
+//Value Computed by CMake
+megabot_description_SOURCE_DIR:STATIC=/home/josh/megabot/ros/catkin_ws/src/megabot_description
+
+//Value Computed by CMake
+megabot_gazebo_BINARY_DIR:STATIC=/home/josh/megabot/ros/catkin_ws/build/megabot_gazebo
+
+//Value Computed by CMake
+megabot_gazebo_SOURCE_DIR:STATIC=/home/josh/megabot/ros/catkin_ws/src/megabot_gazebo
+
 
 ########################
 # INTERNAL cache entries

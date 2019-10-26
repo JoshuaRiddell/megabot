@@ -5,5 +5,5 @@
 # This file includes the relevant testing commands required for 
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("gtest")
-subdirs("madbot_description")
-subdirs("madbot_gazebo")
+subdirs("megabot_gazebo")
+subdirs("megabot_description")

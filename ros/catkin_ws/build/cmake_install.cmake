@@ -131,8 +131,8 @@ endif()
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/josh/megabot/ros/catkin_ws/build/gtest/cmake_install.cmake")
-  include("/home/josh/megabot/ros/catkin_ws/build/madbot_description/cmake_install.cmake")
-  include("/home/josh/megabot/ros/catkin_ws/build/madbot_gazebo/cmake_install.cmake")
+  include("/home/josh/megabot/ros/catkin_ws/build/megabot_gazebo/cmake_install.cmake")
+  include("/home/josh/megabot/ros/catkin_ws/build/megabot_description/cmake_install.cmake")
 
 endif()
 

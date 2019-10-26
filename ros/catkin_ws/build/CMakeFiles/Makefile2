@@ -405,72 +405,72 @@ clean: gtest/googlemock/gtest/CMakeFiles/gtest.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Directory level rules for directory madbot_description
+# Directory level rules for directory megabot_gazebo
 
 # Convenience name for "all" pass in the directory.
-madbot_description/all:
+megabot_gazebo/all:
 
-.PHONY : madbot_description/all
+.PHONY : megabot_gazebo/all
 
 # Convenience name for "clean" pass in the directory.
-madbot_description/clean: madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
+megabot_gazebo/clean: megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/clean
 
-.PHONY : madbot_description/clean
+.PHONY : megabot_gazebo/clean
 
 # Convenience name for "preinstall" pass in the directory.
-madbot_description/preinstall:
+megabot_gazebo/preinstall:
 
-.PHONY : madbot_description/preinstall
+.PHONY : megabot_gazebo/preinstall
 
 #=============================================================================
-# Target rules for target madbot_description/CMakeFiles/_catkin_empty_exported_target.dir
+# Target rules for target megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir
 
 # All Build rule for target.
-madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/all:
-	$(MAKE) -f madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/build.make madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/depend
-	$(MAKE) -f madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/build.make madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/build
+megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/all:
+	$(MAKE) -f megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/build.make megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/depend
+	$(MAKE) -f megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/build.make megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/build
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/josh/megabot/ros/catkin_ws/build/CMakeFiles --progress-num= "Built target _catkin_empty_exported_target"
-.PHONY : madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/all
+.PHONY : megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/all
 
 # Build rule for subdir invocation for target.
-madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/rule: cmake_check_build_system
+megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/josh/megabot/ros/catkin_ws/build/CMakeFiles 0
-	$(MAKE) -f CMakeFiles/Makefile2 madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/josh/megabot/ros/catkin_ws/build/CMakeFiles 0
-.PHONY : madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/rule
+.PHONY : megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/rule
 
 # Convenience name for target.
-_catkin_empty_exported_target: madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/rule
+_catkin_empty_exported_target: megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/rule
 
 .PHONY : _catkin_empty_exported_target
 
 # clean rule for target.
-madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/clean:
-	$(MAKE) -f madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/build.make madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
-.PHONY : madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
+megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/clean:
+	$(MAKE) -f megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/build.make megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/clean
+.PHONY : megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/clean
 
 # clean rule for target.
-clean: madbot_description/CMakeFiles/_catkin_empty_exported_target.dir/clean
+clean: megabot_gazebo/CMakeFiles/_catkin_empty_exported_target.dir/clean
 
 .PHONY : clean
 
 #=============================================================================
-# Directory level rules for directory madbot_gazebo
+# Directory level rules for directory megabot_description
 
 # Convenience name for "all" pass in the directory.
-madbot_gazebo/all:
+megabot_description/all:
 
-.PHONY : madbot_gazebo/all
+.PHONY : megabot_description/all
 
 # Convenience name for "clean" pass in the directory.
-madbot_gazebo/clean:
+megabot_description/clean:
 
-.PHONY : madbot_gazebo/clean
+.PHONY : megabot_description/clean
 
 # Convenience name for "preinstall" pass in the directory.
-madbot_gazebo/preinstall:
+megabot_description/preinstall:
 
-.PHONY : madbot_gazebo/preinstall
+.PHONY : megabot_description/preinstall
 
 #=============================================================================
 # Special targets to cleanup operation of make.
