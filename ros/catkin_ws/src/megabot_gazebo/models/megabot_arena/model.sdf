@@ -3,7 +3,7 @@
 <sdf version="1.5">
     <model name="arena_mesh">
 
-      <pose>0 0 0.001  0 0 0</pose>
+      <pose>0 0 -0.005 0 0 0</pose>
       <static>true</static>
 
       <link name="body">
@@ -20,6 +20,22 @@
             <mesh><uri>model://megabot_arena/meshes/arena.dae</uri></mesh>
           </geometry>
         </visual>
+
+      </link>
+
+      <link name="floor">
+        <pose> 0 0 0.005 0 0 0 </pose>
+
+        <collision name="collision">
+
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>2.4 2.4</size>
+            </plane>
+          </geometry>
+
+        </collision>
 
       </link>
     </model>

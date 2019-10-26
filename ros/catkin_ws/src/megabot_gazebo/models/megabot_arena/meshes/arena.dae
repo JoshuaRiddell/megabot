@@ -5,8 +5,8 @@
       <author>Blender User</author>
       <authoring_tool>Blender 2.79.0</authoring_tool>
     </contributor>
-    <created>2019-10-26T23:26:03</created>
-    <modified>2019-10-26T23:26:03</modified>
+    <created>2019-10-26T23:57:03</created>
+    <modified>2019-10-26T23:57:03</modified>
     <unit name="meter" meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
@@ -833,7 +833,7 @@
         </instance_geometry>
       </node>
       <node id="Red_Area" name="Red_Area" type="NODE">
-        <matrix sid="transform">0.4 0 0 -0.765 0 0.4 0 0.765 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.4 0 0 -0.765 0 0.4 0 0.765 0 0 1 0.001 0 0 0 1</matrix>
         <instance_geometry url="#Plane-mesh" name="Red_Area">
           <bind_material>
             <technique_common>
@@ -843,7 +843,7 @@
         </instance_geometry>
       </node>
       <node id="Green_Area" name="Green_Area" type="NODE">
-        <matrix sid="transform">0.4 0 0 -0.7649999 0 0.4 0 -0.7650001 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.4 0 0 -0.7649999 0 0.4 0 -0.7650001 0 0 1 0.001 0 0 0 1</matrix>
         <instance_geometry url="#Plane_001-mesh" name="Green_Area">
           <bind_material>
             <technique_common>
@@ -853,7 +853,7 @@
         </instance_geometry>
       </node>
       <node id="Start_Area" name="Start_Area" type="NODE">
-        <matrix sid="transform">0.23 0 0 -0.935 0 0.23 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.23 0 0 -0.935 0 0.23 0 0 0 0 1 0.001 0 0 0 1</matrix>
         <instance_geometry url="#Plane_002-mesh" name="Start_Area">
           <bind_material>
             <technique_common>
@@ -863,7 +863,7 @@
         </instance_geometry>
       </node>
       <node id="Start_Line" name="Start_Line" type="NODE">
-        <matrix sid="transform">0.5941408 0 0 -0.5720691 0 0.0095 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.5941408 0 0 -0.5720691 0 0.0095 0 0 0 0 1 0.001 0 0 0 1</matrix>
         <instance_geometry url="#Plane_003-mesh" name="Start_Line">
           <bind_material>
             <technique_common>
@@ -873,7 +873,7 @@
         </instance_geometry>
       </node>
       <node id="Left_Line" name="Left_Line" type="NODE">
-        <matrix sid="transform">0.6006315 -0.00438126 0 0.5840728 0.3458889 0.007607999 0 0.8340751 0 0 0.9241427 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.6006315 -0.00438126 0 0.5840728 0.3458889 0.007607999 0 0.8340751 0 0 0.9241427 0.001 0 0 0 1</matrix>
         <instance_geometry url="#Plane_005-mesh" name="Left_Line">
           <bind_material>
             <technique_common>
@@ -883,7 +883,7 @@
         </instance_geometry>
       </node>
       <node id="Right_Line" name="Right_Line" type="NODE">
-        <matrix sid="transform">0.6006314 0.004381262 0 0.5840728 -0.3458891 0.007607998 0 -0.8340749 0 0 0.9241427 0 0 0 0 1</matrix>
+        <matrix sid="transform">0.6006314 0.004381262 0 0.5840728 -0.3458891 0.007607998 0 -0.8340749 0 0 0.9241427 0.001 0 0 0 1</matrix>
         <instance_geometry url="#Plane_007-mesh" name="Right_Line">
           <bind_material>
             <technique_common>
