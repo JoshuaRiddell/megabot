@@ -1,8 +1,0 @@
-prefix=/home/josh/megabot/ros/catkin_ws/install
-
-Name: madbot_gazebo
-Description: Description of madbot_gazebo
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/josh/megabot/ros/catkin_ws/install/lib 
-Requires: 

@@ -1,8 +1,0 @@
-prefix=/home/josh/megabot/ros/catkin_ws/devel
-
-Name: madbot_description
-Description: Description of madbot_description
-Version: 0.0.0
-Cflags: 
-Libs: -L/home/josh/megabot/ros/catkin_ws/devel/lib 
-Requires: 
