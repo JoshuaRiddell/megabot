@@ -10,12 +10,12 @@
   </include>
 
   <!-- Convert an xacro and put on parameter server -->
-  <param name="megabot_description" command="$(find xacro)/xacro.py $(find megabot_description)/urdf/megabot.urdf.xacro" />
+  <param name="megabot" command="$(find xacro)/xacro.py $(find megabot)/urdf/megabot.urdf.xacro" />
 
-  <node name="spawn_megabot" pkg="gazebo_ros" type="spawn_model" args="-param megabot_description -urdf -z 0.001 -x -0.935 -model megabot" />
+  <node name="spawn_megabot" pkg="gazebo_ros" type="spawn_model" args="-param megabot -urdf -z 0.001 -x -0.935 -model megabot" />
 
-  <node name="spawn_ball_1" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0.001 -y -0.5 -model ball_left" />
-  <node name="spawn_ball_2" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 0 -model ball_middle" />
-  <node name="spawn_ball_3" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot_description)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 0.5 -model ball_right" />
+  <node name="spawn_ball_1" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot)/urdf/tennis_ball.urdf -urdf -z 0.001 -y -0.5 -model ball_left" />
+  <node name="spawn_ball_2" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 0 -model ball_middle" />
+  <node name="spawn_ball_3" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 0.5 -model ball_right" />
 
 </launch>

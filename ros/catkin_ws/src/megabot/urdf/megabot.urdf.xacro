@@ -3,8 +3,8 @@
 <robot xmlns:xacro="http://ros.org/wiki/xacro" name="megabot">
 
   <!-- Include files for robot subcomponents -->
-  <xacro:include filename="$(find megabot_description)/urdf/wheel.urdf.xacro" />
-  <xacro:include filename="$(find megabot_description)/urdf/camera.urdf.xacro" />
+  <xacro:include filename="$(find megabot)/urdf/wheel.urdf.xacro" />
+  <xacro:include filename="$(find megabot)/urdf/camera.urdf.xacro" />
 
   <!-- Global constants -->
   <xacro:property name="M_PI" value="3.14159"/>

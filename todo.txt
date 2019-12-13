@@ -1,0 +1,7 @@
+Modules
+
+- video input node
+- mapping module
+- location module
+- controller state machine
+- odometry module/topic

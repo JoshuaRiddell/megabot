@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(megabot_description)
+project(megabot)
 
 find_package(catkin REQUIRED)
 
