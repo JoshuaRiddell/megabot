@@ -15,14 +15,15 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         ros::spinOnce();
+        r.sleep();
 
         geometry_msgs::TransformStamped transformStamped;
 
         transformStamped.header.stamp = ros::Time::now();
         transformStamped.header.frame_id = "map";
-        transformStamped.child_frame_id = "base_link";
-        transformStamped.transform.translation.x = 0.0;
-        transformStamped.transform.translation.y = 0.0;
+        transformStamped.child_frame_id = "base_footprint";
+        transformStamped.transform.translation.x = 1.0;
+        transformStamped.transform.translation.y = 1.0;
         transformStamped.transform.translation.z = 0.0;
         tf2::Quaternion q;
         q.setRPY(0, 0, 0);

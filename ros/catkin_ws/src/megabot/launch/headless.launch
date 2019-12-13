@@ -7,7 +7,7 @@
 
   <node pkg="localisation" type="localisation_node" name="localisation"/>
 
-  <param name="megabot_description" textfile="$(find megabot)/urdf/megabot.urdf.xacro"/>
+  <param name="megabot_description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
   <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
     <remap from="robot_description" to="megabot_description" />
     <remap from="joint_states" to="megabot_joint_states" />
