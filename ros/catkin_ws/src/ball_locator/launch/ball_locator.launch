@@ -1,0 +1,5 @@
+<launch>
+    <group ns="megabot">
+        <node name="ball_locator" pkg="ball_locator" type="ball_locator_node"/>
+    </group>
+</launch>

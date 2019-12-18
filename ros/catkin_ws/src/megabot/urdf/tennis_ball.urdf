@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<robot name="tennis_ball">
+<robot name="ball">
 
   <!-- root link, on the ground just below the model origin -->
   <link name="ball">

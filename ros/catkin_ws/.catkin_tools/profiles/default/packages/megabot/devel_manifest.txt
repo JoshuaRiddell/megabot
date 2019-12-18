@@ -1,0 +1,5 @@
+megabot
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot/cmake.lock /home/josh/code/megabot/ros/catkin_ws/devel/./cmake.lock
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot/lib/pkgconfig/megabot.pc /home/josh/code/megabot/ros/catkin_ws/devel/lib/pkgconfig/megabot.pc
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot/share/megabot/cmake/megabotConfig-version.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/megabot/cmake/megabotConfig-version.cmake
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot/share/megabot/cmake/megabotConfig.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/megabot/cmake/megabotConfig.cmake

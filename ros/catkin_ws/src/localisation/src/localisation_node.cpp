@@ -6,7 +6,7 @@
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "localisation_node");
+    ros::init(argc, argv, "localisation");
     tf2_ros::TransformBroadcaster br;
 
     ros::NodeHandle n;

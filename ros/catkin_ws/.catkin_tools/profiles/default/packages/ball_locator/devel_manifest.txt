@@ -1,0 +1,6 @@
+ball_locator
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_locator/cmake.lock /home/josh/code/megabot/ros/catkin_ws/devel/./cmake.lock
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_locator/lib/pkgconfig/ball_locator.pc /home/josh/code/megabot/ros/catkin_ws/devel/lib/pkgconfig/ball_locator.pc
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_locator/lib/ball_locator/ball_locator_node /home/josh/code/megabot/ros/catkin_ws/devel/lib/ball_locator/ball_locator_node
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_locator/share/ball_locator/cmake/ball_locatorConfig.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/ball_locator/cmake/ball_locatorConfig.cmake
+/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_locator/share/ball_locator/cmake/ball_locatorConfig-version.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/ball_locator/cmake/ball_locatorConfig-version.cmake
