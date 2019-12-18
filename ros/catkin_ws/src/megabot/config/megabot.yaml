@@ -1,0 +1,9 @@
+ball_locator: {area_high: 55000.0, area_low: 17000.0, circularity_high: 1.0, circularity_low: 0.83,
+  h_high: 66, h_low: 52, s_high: 255,
+  s_low: 0, v_high: 255, v_low: 0}
+camera:
+  image_raw:
+    compressed: {format: jpeg, jpeg_quality: 80, png_level: 9}
+    compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
+    theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
+  imager_rate: 2.0

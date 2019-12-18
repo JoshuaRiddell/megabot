@@ -6,6 +6,8 @@
                 "limitSymbolsToIncludedHeaders": true
             },
             "includePath": [
+                "${workspaceFolder}",
+                "./ros/catkin_ws/devel/**",
                 "/opt/ros/melodic/include/**",
                 "/usr/include/**"
             ],
