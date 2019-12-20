@@ -11,16 +11,20 @@ ros::Publisher ball_map_pub, ball_map_vis_pub;
 void ball_callback(const geometry_msgs::PointStamped& msg) {
     // try and add this point to existing trackers and delete expired trackers
     bool tracker_found = false;
-    for (auto ball_tracker = ball_trackers.begin(); ball_tracker != ball_trackers.end(); ++ball_tracker) {
+    auto ball_tracker = ball_trackers.begin();
+
+    while (ball_tracker != ball_trackers.end()) {
         // attempt to add sample
         if (!tracker_found && ball_tracker->add_sample(msg)) {
             tracker_found = true;
         }
 
         // delete if expired
-        // if (ball_tracker->expired()) {
-        //     ball_trackers.erase(ball_tracker);
-        // }
+        if (ball_tracker->expired()) {
+            ball_tracker = ball_trackers.erase(ball_tracker);
+        } else {
+            ball_tracker++;
+        }
     }
 
     // if no tracker matched, add a new one to the list

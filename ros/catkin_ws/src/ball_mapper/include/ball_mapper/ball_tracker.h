@@ -7,7 +7,7 @@ public:
                 std::string frame_id = "map",
                 int max_samples = 10,
                 int num_samples_valid_threshold = 5,
-                double samples_distance_valid_threshold = 0.03,
+                double samples_distance_valid_threshold = 0.01,
                 double expiry_timeout = 5);
     bool is_valid();
     bool add_sample(geometry_msgs::PointStamped point);
