@@ -9,12 +9,19 @@
 #include <dynamic_reconfigure/server.h>
 #include <ball_locator/ImageAnalysisConfig.h>
 
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2_ros/transform_listener.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/Twist.h>
+
+tf2_ros::Buffer tf_buffer;
 ros::Publisher ball_pub;
 cv::Scalar hsv_low(0, 0, 0), hsv_high(255, 255, 255);
 double area_low = 0;
 double area_high = 1000000;
 double circularity_low = 0.;
 double circularity_high = 1.;
+double fx, fy, cx, cy;
 
 void config_callback(ball_locator::ImageAnalysisConfig &config, uint32_t level) {
     hsv_low.val[0] = config.h_low;
@@ -32,8 +39,25 @@ void config_callback(ball_locator::ImageAnalysisConfig &config, uint32_t level) 
     circularity_high = config.circularity_high;
 }
 
+void camera_info_callback(const sensor_msgs::CameraInfo& msg) {
+    fx = msg.K[0];
+    cx = msg.K[2];
+    fy = msg.K[4];
+    cy = msg.K[5];
+}
+
 void image_callback(const sensor_msgs::ImageConstPtr& msg)
 {
+    // try and get transform for the camera
+    geometry_msgs::TransformStamped transformStamped;
+    try {
+        transformStamped = tf_buffer.lookupTransform("map", msg->header.frame_id, msg->header.stamp, ros::Duration(1.0));
+    }
+    catch (tf2::TransformException ex){
+        ROS_ERROR("%s", ex.what());
+        return;
+    }
+
     // extract image from rosmsg
     cv::Mat hsv, bin;
     cv::Mat img = cv_bridge::toCvShare(msg, "bgr8")->image;
@@ -84,26 +108,66 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
     cv::imshow("view", view);
     cv::waitKey(30);
 
-    geometry_msgs::Point p;
-    p.x = 0;
-    p.y = 0;
-    p.z = 0;
-    ball_pub.publish(p);
+    if (filtered_centres.size() == 0) {
+        return;
+    }
+
+    tf2::Quaternion rotation;
+    tf2::fromMsg(transformStamped.transform.rotation, rotation);
+    tf2::Vector3 o(
+        transformStamped.transform.translation.x,
+        transformStamped.transform.translation.y,
+        transformStamped.transform.translation.z
+    );
+
+    for (int i = 0; i < filtered_centres.size(); ++i) {
+        // unit vector from camera origin to tennis ball point
+        tf2::Vector3 v(
+            1.0,
+            -(filtered_centres[i].x - cx)/fx,
+            -(filtered_centres[i].y - cy)/fy
+        );
+
+        // rotate vector into map coordinate frame
+        v = tf2::quatRotate(rotation, v);
+
+        // intersect vector in map coordinate frame with ground plane
+        double factor = -(o.getZ() - 0.033) / v.getZ();
+        double dx = factor * v.getX();
+        double dy = factor * v.getY();
+
+        geometry_msgs::PointStamped p;
+        p.header.frame_id = "map";
+        p.header.stamp = msg->header.stamp;
+        p.point.x = o.getX() + dx;
+        p.point.y = o.getY() + dy;
+        p.point.z = 0.033;
+        ball_pub.publish(p);
+    }
 }
 
 int main(int argc, char **argv)
 {
+    // node setup
     ros::init(argc, argv, "ball_locator");
     ros::NodeHandle n;
 
+    // dynamic reconfigure setup
     dynamic_reconfigure::Server<ball_locator::ImageAnalysisConfig> server;
     server.setCallback(config_callback);
+    
+    // publisher for ball positions
+    ball_pub = n.advertise<geometry_msgs::PointStamped>("ball", 10);
 
-    ball_pub = n.advertise<geometry_msgs::Point>("ball", 10);
-
+    // subscriber for camera image
     image_transport::ImageTransport it(n);
-    image_transport::Subscriber sub = it.subscribe("camera/image_raw", 1, image_callback);
+    image_transport::Subscriber image_sub = it.subscribe("camera/image_raw", 1, image_callback);
+    ros::Subscriber camera_info_sub = n.subscribe("camera/camera_info", 1, camera_info_callback);
 
+    // tf setup
+    tf2_ros::TransformListener tf_listener(tf_buffer);
+
+    // main loop
     ros::spin();
 
     cv::destroyWindow("view");
