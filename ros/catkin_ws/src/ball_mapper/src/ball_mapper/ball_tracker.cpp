@@ -5,7 +5,7 @@ BallTracker::BallTracker(geometry_msgs::PointStamped initial_point,
             std::string frame_id,
             int max_samples,
             int num_samples_valid_threshold,
-            int samples_distance_valid_threshold,
+            double samples_distance_valid_threshold,
             double expiry_timeout) {
     // initialise id to invalid since ball is not valid on startup
     _id = -1;
@@ -71,6 +71,8 @@ bool BallTracker::add_sample(geometry_msgs::PointStamped point) {
 
     // update the location since samples have now changed
     calculate_location();
+
+    return true;
 }
 
 bool BallTracker::expired() {
