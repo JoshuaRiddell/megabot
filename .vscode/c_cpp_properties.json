@@ -8,6 +8,7 @@
             "includePath": [
                 "${workspaceFolder}",
                 "./ros/catkin_ws/devel/**",
+                "./ros/catkin_ws/src/**",
                 "/opt/ros/melodic/include/**",
                 "/usr/include/**"
             ],

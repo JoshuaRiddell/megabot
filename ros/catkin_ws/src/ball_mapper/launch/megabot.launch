@@ -1,0 +1,7 @@
+<launch>
+    <group ns="megabot">
+        <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
+        <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
+        <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>
+    </group>
+</launch>
