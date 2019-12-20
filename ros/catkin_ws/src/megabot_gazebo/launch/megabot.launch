@@ -12,8 +12,10 @@
   <!-- Convert an xacro and put on parameter server -->
   <param name="megabot" command="$(find xacro)/xacro.py $(find megabot)/urdf/megabot.urdf.xacro" />
 
+  <!-- Spawn the robot itself -->
   <node name="spawn_megabot" pkg="gazebo_ros" type="spawn_model" args="-param megabot -urdf -z 0.001 -y 0.265 -x 1.2 -Y 1.570796327 -model megabot" />
 
+  <!-- Spawn the 3 balls in the middle of the course -->
   <node name="spawn_ball_1" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 1.2 -x 0.7 -model ball_left" />
   <node name="spawn_ball_2" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 1.2 -x 1.2 -model ball_middle" />
   <node name="spawn_ball_3" pkg="gazebo_ros" type="spawn_model" args="-file $(find megabot)/urdf/tennis_ball.urdf -urdf -z 0.001 -y 1.2 -x 1.7 -model ball_right" />

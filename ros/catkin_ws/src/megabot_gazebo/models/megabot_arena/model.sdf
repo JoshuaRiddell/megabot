@@ -2,7 +2,7 @@
 
 <sdf version="1.5">
     <model name="arena_mesh">
-
+      <!-- Location of arena in xyz coordinate system -->
       <pose>1.2 1.2 -0.005 0 0 1.570796327</pose>
       <static>true</static>
 
