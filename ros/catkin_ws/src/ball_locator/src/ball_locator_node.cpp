@@ -14,6 +14,10 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 
+#include <sensor_msgs/CameraInfo.h>
+#include <sensor_msgs/Image.h>
+
+image_transport::CameraPublisher debug_pub;
 tf2_ros::Buffer tf_buffer;
 ros::Publisher ball_pub;
 cv::Scalar hsv_low(0, 0, 0), hsv_high(255, 255, 255);
@@ -57,9 +61,12 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
         ROS_ERROR("%s", ex.what());
         return;
     }
+    
+    // check if we should output a debug video
+    bool debug_video_out = debug_pub.getNumSubscribers() > 0;
 
     // extract image from rosmsg
-    cv::Mat hsv, bin;
+    cv::Mat hsv, bin, debug;
     cv::Mat img = cv_bridge::toCvShare(msg, "bgr8")->image;
 
     // get binary image using hsv thresholding
@@ -67,11 +74,14 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
     cv::inRange(hsv, hsv_low, hsv_high, bin);
 
     // get contours from binary image
-    std::vector<std::vector<cv::Point> > contours;
+    std::vector<std::vector<cv::Point>> contours;
     cv::findContours(bin, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
     std::vector<cv::Point> filtered_centres;
-    cv::Mat drawing = img;
+
+    if (debug_video_out)
+        debug = img;
+
     // filter contours based on area
     for( int i = 0; i< contours.size(); i++ )
     {
@@ -98,15 +108,12 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
         // record all centres
         filtered_centres.push_back(centre);
 
-        cv::Scalar color = cv::Scalar( 255, 255, 255 );
-        cv::drawContours( drawing, contours, i, color, 2, 8);
-        cv::circle(drawing, centre, 3, color, 3);
+        if (debug_video_out) {
+            cv::Scalar color = cv::Scalar( 255, 255, 255 );
+            cv::drawContours(debug, contours, i, color, 2, 8);
+            cv::circle(debug, centre, 3, color, 3);
+        }
     }
-
-    cv::Mat view;
-    cv::resize(drawing, view, cv::Size(960, 540));
-    cv::imshow("view", view);
-    cv::waitKey(30);
 
     if (filtered_centres.size() == 0) {
         return;
@@ -144,6 +151,26 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
         p.point.z = 0.033;
         ball_pub.publish(p);
     }
+
+    if (debug_video_out) {
+        std_msgs::Header img_msg_header;
+        img_msg_header.stamp = msg->header.stamp;
+        img_msg_header.frame_id = "camera_link";
+
+        sensor_msgs::CameraInfo cam_info_msg;
+        cam_info_msg.header = img_msg_header;
+
+        cam_info_msg.height = debug.rows;
+        cam_info_msg.width = debug.cols;
+        // distortion
+        cam_info_msg.distortion_model = "plumb_bob";
+        // binning
+        cam_info_msg.binning_x = 0;
+        cam_info_msg.binning_y = 0;
+
+        sensor_msgs::ImagePtr img_msg = cv_bridge::CvImage(img_msg_header, "bgr8", debug).toImageMsg();
+        debug_pub.publish(*img_msg, cam_info_msg);
+    }
 }
 
 int main(int argc, char **argv)
@@ -163,6 +190,7 @@ int main(int argc, char **argv)
     image_transport::ImageTransport it(n);
     image_transport::Subscriber image_sub = it.subscribe("camera/image_raw", 1, image_callback);
     ros::Subscriber camera_info_sub = n.subscribe("camera/camera_info", 1, camera_info_callback);
+    debug_pub = it.advertiseCamera("ball/debug", 1);
 
     // tf setup
     tf2_ros::TransformListener tf_listener(tf_buffer);
