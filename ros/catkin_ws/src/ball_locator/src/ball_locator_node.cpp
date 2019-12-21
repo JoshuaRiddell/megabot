@@ -2,6 +2,9 @@
 #include <image_transport/image_transport.h>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/Point.h>
+#include <geometry_msgs/Point32.h>
+#include <geometry_msgs/PolygonStamped.h>
+#include <ball_msgs/BallView.h>
 
 #include <opencv2/core/mat.hpp>
 
@@ -25,7 +28,7 @@ image_transport::CameraPublisher debug_pub;
 tf2_ros::Buffer tf_buffer;
 
 // publisher for ball position messages
-ros::Publisher ball_pub;
+ros::Publisher ball_pub, ball_view_pub, view_pub;
 
 // image processing parameters
 cv::Scalar hsv_low(0, 0, 0), hsv_high(255, 255, 255);
@@ -201,11 +204,6 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
     std::vector<cv::Point> centres;
     get_ball_centres(centres, img, debug);
 
-    // exit if no centres were found
-    if (centres.size() == 0) {
-        return;
-    }
-
     // get origin and rotation of camera to transform ball locations
     tf2::Quaternion rotation;
     tf2::fromMsg(transformStamped.transform.rotation, rotation);
@@ -219,10 +217,41 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
     geometry_msgs::PointStamped p;
     p.header.frame_id = "map";
     p.header.stamp = msg->header.stamp;
+
+    geometry_msgs::PolygonStamped view_msg;
+    view_msg.header.frame_id = "map";
+    view_msg.header.stamp = msg->header.stamp;
+
+    ball_msgs::BallView ball_view_msg;
+    ball_view_msg.header.frame_id = "map";
+    ball_view_msg.header.stamp = msg->header.stamp;
+
     for (int i = 0; i < centres.size(); ++i) {
         centre_to_point(rotation, origin, centres[i], p.point);
         ball_pub.publish(p);
+        ball_view_msg.locations.push_back(p.point);
     }
+
+    // get bounds of camera view projected onto the ground
+    std::vector<cv::Point> image_bounds;
+    image_bounds.push_back(cv::Point(0.1*img.cols, 0.1*img.rows));
+    image_bounds.push_back(cv::Point(0.9*img.cols, 0.1*img.rows));
+    image_bounds.push_back(cv::Point(0.9*img.cols, 0.9*img.rows));
+    image_bounds.push_back(cv::Point(0.1*img.cols, 0.9*img.rows));
+    for (int i = 0; i < image_bounds.size(); ++i) {
+        geometry_msgs::Point p;
+        geometry_msgs::Point32 p32;
+        centre_to_point(rotation, origin, image_bounds[i], p);
+
+        ball_view_msg.camera_view.push_back(p);
+
+        p32.x = p.x;
+        p32.y = p.y;
+        p32.z = p.z;
+        view_msg.polygon.points.push_back(p32);
+    }
+    view_pub.publish(view_msg);
+    ball_view_pub.publish(ball_view_msg);
 
     // publish debug image if needed
     if (!debug.empty()) {
@@ -242,6 +271,8 @@ int main(int argc, char **argv)
     
     // publisher for ball positions
     ball_pub = n.advertise<geometry_msgs::PointStamped>("ball", 10);
+    view_pub = n.advertise<geometry_msgs::PolygonStamped>("camera_view", 10);
+    ball_view_pub = n.advertise<ball_msgs::BallView>("ball_view", 10);
 
     // subscriber for camera image
     image_transport::ImageTransport it(n);

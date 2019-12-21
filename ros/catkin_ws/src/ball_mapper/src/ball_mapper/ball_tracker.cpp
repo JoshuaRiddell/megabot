@@ -1,12 +1,13 @@
-#include <ball_mapper/ball_tracker.h>
 #include <ros/time.h>
+#include <ball_mapper/ball_tracker.h>
 
-BallTracker::BallTracker(geometry_msgs::PointStamped initial_point,
-            std::string frame_id,
-            int max_samples,
-            int num_samples_valid_threshold,
-            double samples_distance_valid_threshold,
-            double expiry_timeout) {
+BallTracker::BallTracker(ros::Time stamp,
+                tf2::Vector3 initial_sample,
+                std::string frame_id,
+                int max_samples,
+                int num_samples_valid_threshold,
+                double samples_distance_valid_threshold,
+                double expiry_timeout) {
     // initialise id to invalid since ball is not valid on startup
     _id = -1;
 
@@ -22,69 +23,117 @@ BallTracker::BallTracker(geometry_msgs::PointStamped initial_point,
     _expiry_timeout = expiry_timeout;
 
     // add the initial sample to our list
-    tf2::Vector3 point_tf = tf2::Vector3(
-        initial_point.point.x,
-        initial_point.point.y,
-        initial_point.point.z
-    );
-    samples.push_back(point_tf);
-    _last_sample_time = initial_point.header.stamp;
+    samples.push_back(initial_sample);
+    _last_sample_time = stamp;
 
     // sample mean is now just the added point
-    sample_mean = point_tf;
+    sample_mean = initial_sample;
+
+    // initialise to not in view
+    _was_in_view = false;
 }
 
-bool BallTracker::is_valid() {
-    // check we have enough samples
-    if (samples.size() < _num_samples_valid_threshold) {
-        return false;
-    }
-
-    // we are valid, if the id isn't set then set it now
-    if (_id == -1) {
-        _id = _next_id++;
-    }
-
-    return true;
-}
-
-bool BallTracker::add_sample(geometry_msgs::PointStamped point) {
-    tf2::Vector3 point_tf = tf2::Vector3(
-        point.point.x,
-        point.point.y,
-        point.point.z
-    );
-
-    if (sample_mean.distance(point_tf) > _samples_distance_valid_threshold) {
-        // point is too far to be considered
-        return false;
-    }
+bool BallTracker::update(ros::Time stamp,
+                        std::vector<tf2::Vector3> &locations,
+                        std::vector<tf2::Vector3> camera_view) {
     
-    // update samples
-    samples.push_back(point_tf);
-    _last_sample_time = point.header.stamp;
+    // if we're not in view then none of the points will be for us
+    bool currently_in_view = in_view(camera_view);
+    bool sample_found = add_sample(stamp, locations);
 
-    // remove oldest sample if required
-    if (samples.size() > _max_samples) {
-        samples.pop_front();
+    if (expired_by_timeout(stamp)) {
+        return true;
     }
 
-    // update the location since samples have now changed
-    calculate_location();
-
-    return true;
+    if (expired_by_view(stamp, currently_in_view, sample_found)) {
+        return true;
+    }
+    return false;
 }
 
-bool BallTracker::expired() {
-    // check if this ball has not had enough data to be considered
-    if (is_valid()) {
-        // valid balls have unlimited expiry
+bool BallTracker::in_view(std::vector<tf2::Vector3> camera_view) {
+    bool ret = false;
+    int i, j;
+    for (i = 0, j = camera_view.size()-1; i < camera_view.size(); j = i++) {
+        if ((camera_view[i].getY() > sample_mean.getY()) != (camera_view[j].getY() > sample_mean.getY()) &&
+            (sample_mean.getX() < (camera_view[j].getX() - camera_view[i].getX()) * (sample_mean.getY() - camera_view[i].getY()) / (camera_view[j].getY()-camera_view[i].getY()) + camera_view[i].getX())) {
+            ret = !ret;
+        }
+    }
+    return ret;
+}
+
+bool BallTracker::add_sample(ros::Time stamp, std::vector<tf2::Vector3> &locations) {
+    // loop through all passed detected locations
+    for (int i = 0; i < locations.size(); ++i) {
+
+        // check point is close enough to current mean to be considered
+        if (sample_mean.distance(locations[i]) < _samples_distance_valid_threshold) {
+
+            // add sample to our list
+            samples.push_back(locations[i]);
+            _last_sample_time = stamp;
+
+            // remove this sample from the locations list since we have found the ball
+            locations.erase(locations.begin() + i);
+
+            // remove our oldest sample to keep the max length if required
+            if (samples.size() > _max_samples) {
+                samples.pop_front();
+            }
+
+            // update the location since samples have now changed
+            calculate_location();
+
+            // check location validity and add id if required
+            if (_id == -1 && location_valid()) {
+                _id = _next_id++;
+            }
+
+            // there can't be two samples of the same ball so we can stop here
+            return true;
+        }
+    }
+
+    // no samples corresponded to our ball
+    return false;
+}
+
+bool BallTracker::expired_by_timeout(ros::Time stamp) {
+    // check if ball's location has been invalid for enough time
+    ros::Duration expiry_duration(_expiry_timeout);
+    if (!location_valid()
+            && stamp - _last_sample_time > expiry_duration) {
+        // ball has not been valid for enough time
+        return true;
+    }
+
+    return false;
+}
+
+bool BallTracker::expired_by_view(ros::Time stamp, bool currently_in_view, bool sample_found) {
+    if (!currently_in_view) {
+        _was_in_view = false;
         return false;
+    }
+
+    if (!_was_in_view) {
+        _enter_view_time = stamp;
+        _was_in_view = true;
     }
 
     ros::Duration expiry_duration(_expiry_timeout);
-    if (ros::Time::now() - _last_sample_time < expiry_duration) {
-        // it's not been long enough for it to expire
+    if (!sample_found &&
+        stamp - _enter_view_time > expiry_duration) {
+        return true;
+    }
+
+    return false;
+}
+
+bool BallTracker::location_valid() {
+    // check we have enough samples
+    if (samples.size() < _num_samples_valid_threshold) {
         return false;
     }
 
@@ -115,15 +164,9 @@ void BallTracker::calculate_location() {
     );
 }
 
-geometry_msgs::Point BallTracker::get_location() {
+tf2::Vector3 BallTracker::get_location() {
     // pack calculated location into stamped point
-    geometry_msgs::Point msg;
-
-    msg.x = sample_mean.getX();
-    msg.y = sample_mean.getY();
-    msg.z = sample_mean.getZ();
-
-    return msg;
+    return sample_mean;
 }
 
 int BallTracker::_next_id = 0;
