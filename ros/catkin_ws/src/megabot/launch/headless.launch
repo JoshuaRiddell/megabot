@@ -5,7 +5,7 @@
     <rosparam ns="costmap" command="load" file="$(find megabot)/map/costmap.yaml"/>
   </node>
 
-  <!-- <node pkg="localisation" type="localisation_node" name="localisation"/> -->
+  <node pkg="localisation" type="localisation_node" name="localisation"/>
 
   <param name="megabot_description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
   <param name="ball_description" command="cat $(find megabot)/urdf/tennis_ball.urdf" />
