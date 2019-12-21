@@ -72,7 +72,7 @@ void ball_view_callback(const ball_msgs::BallView& msg) {
     vis_msg.color.a = 1.0;
     vis_msg.color.g = 1.0;
 
-    geometry_extended_msgs::PointArray out_msg;
+    ball_msgs::BallMap out_msg;
     out_msg.header.stamp = ros::Time::now();
     out_msg.header.frame_id = msg.header.frame_id;
     for (auto ball_tracker = ball_trackers.begin(); ball_tracker != ball_trackers.end(); ++ball_tracker) {
@@ -84,7 +84,7 @@ void ball_view_callback(const ball_msgs::BallView& msg) {
             p.y = loc.y();
             p.z = loc.z();
 
-            out_msg.points.push_back(p);
+            out_msg.locations.push_back(p);
             vis_msg.points.push_back(p);
         }
     }
@@ -102,7 +102,7 @@ int main(int argc, char **argv)
     ros::Subscriber ball_view_sub = n.subscribe("ball_view", 20, ball_view_callback);
 
     // point array publisher
-    ball_map_pub = n.advertise<geometry_extended_msgs::PointArray>("ball_map", 5);
+    ball_map_pub = n.advertise<ball_msgs::BallMap>("ball_map", 5);
     ball_map_vis_pub = n.advertise<visualization_msgs::Marker>("ball_map_vis", 5);
 
     ros::spin();
