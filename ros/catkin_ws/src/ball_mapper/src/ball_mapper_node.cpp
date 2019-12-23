@@ -54,8 +54,6 @@ void ball_view_callback(const ball_msgs::BallView& msg) {
         ball_trackers.push_back(BallTracker(stamp, locations[i]));
     }
 
-    std::cout << ball_trackers.size() << std::endl;
-
     // publish valid tracker locations
     visualization_msgs::Marker vis_msg;
     vis_msg.header.stamp = ros::Time::now();

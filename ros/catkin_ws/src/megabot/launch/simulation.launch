@@ -1,0 +1,23 @@
+<launch>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find megabot)/map/map.yaml" />
+  <node name="costmap_2d" pkg="costmap_2d" type="costmap_2d_node">
+    <rosparam ns="costmap" command="load" file="$(find megabot)/map/costmap.yaml"/>
+  </node>
+
+  <param name="ball_description" command="cat $(find megabot)/urdf/tennis_ball.urdf" />
+  
+  <group ns="megabot">
+    <param name="description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
+
+    <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
+    <node pkg="localisation" type="localisation_node" name="localisation"/>
+    
+    <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
+      <remap from="robot_description" to="description" />
+      <remap from="joint_states" to="joint_states" />
+    </node>
+
+    <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
+    <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>
+  </group>
+</launch>

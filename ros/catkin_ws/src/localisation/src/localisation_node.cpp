@@ -34,7 +34,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
     ros::Rate r(20);
 
-    ros::Subscriber sub = n.subscribe("cmd_vel", 1, cmd_vel_callback);
+    ros::Subscriber sub = n.subscribe("/cmd_vel", 1, cmd_vel_callback);
 
     geometry_msgs::TransformStamped transformStamped;
     transformStamped.header.frame_id = "map";
@@ -55,7 +55,6 @@ int main(int argc, char **argv)
     while (ros::ok())
     {
         ros::spinOnce();
-        r.sleep();
 
         state *= increment;
 
@@ -63,6 +62,7 @@ int main(int argc, char **argv)
         transformStamped.transform = tf2::toMsg(state);
 
         br.sendTransform(transformStamped);
+        r.sleep();
     }
 
     return 0;
