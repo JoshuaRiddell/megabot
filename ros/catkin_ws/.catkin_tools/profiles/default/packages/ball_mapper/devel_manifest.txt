@@ -1,7 +1,0 @@
-ball_mapper
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_mapper/cmake.lock /home/josh/code/megabot/ros/catkin_ws/devel/./cmake.lock
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_mapper/lib/libball_tracker.so /home/josh/code/megabot/ros/catkin_ws/devel/lib/libball_tracker.so
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_mapper/lib/pkgconfig/ball_mapper.pc /home/josh/code/megabot/ros/catkin_ws/devel/lib/pkgconfig/ball_mapper.pc
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_mapper/lib/ball_mapper/ball_mapper_node /home/josh/code/megabot/ros/catkin_ws/devel/lib/ball_mapper/ball_mapper_node
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_mapper/share/ball_mapper/cmake/ball_mapperConfig-version.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/ball_mapper/cmake/ball_mapperConfig-version.cmake
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/ball_mapper/share/ball_mapper/cmake/ball_mapperConfig.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/ball_mapper/cmake/ball_mapperConfig.cmake

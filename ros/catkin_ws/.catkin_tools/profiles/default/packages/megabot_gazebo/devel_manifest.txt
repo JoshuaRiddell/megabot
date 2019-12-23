@@ -1,5 +1,0 @@
-megabot_gazebo
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot_gazebo/cmake.lock /home/josh/code/megabot/ros/catkin_ws/devel/./cmake.lock
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot_gazebo/lib/pkgconfig/megabot_gazebo.pc /home/josh/code/megabot/ros/catkin_ws/devel/lib/pkgconfig/megabot_gazebo.pc
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot_gazebo/share/megabot_gazebo/cmake/megabot_gazeboConfig-version.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/megabot_gazebo/cmake/megabot_gazeboConfig-version.cmake
-/home/josh/code/megabot/ros/catkin_ws/devel/.private/megabot_gazebo/share/megabot_gazebo/cmake/megabot_gazeboConfig.cmake /home/josh/code/megabot/ros/catkin_ws/devel/share/megabot_gazebo/cmake/megabot_gazeboConfig.cmake
