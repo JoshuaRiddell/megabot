@@ -3,6 +3,7 @@ project(megabot)
 
 find_package(catkin REQUIRED COMPONENTS
   xacro
+  hector_sensors_description
 )
 
 catkin_package()

@@ -5,6 +5,7 @@
   <!-- Include files for robot subcomponents -->
   <xacro:include filename="$(find megabot)/urdf/wheel.urdf.xacro" />
   <xacro:include filename="$(find megabot)/urdf/camera.urdf.xacro" />
+  <xacro:include filename="$(find hector_sensors_description)/urdf/sonar_sensor.urdf.xacro" />
 
   <!-- Global constants -->
   <xacro:property name="M_PI" value="3.14159"/>
@@ -99,6 +100,25 @@
   <!-- Add camera via macros -->
   <xacro:megabot_camera />
 
+  <xacro:property name="sonar_ur" value="25.0"/>
+  <xacro:property name="sonar_min_rng" value="0.1"/>
+  <xacro:property name="sonar_max_rng" value="0.8"/>
+  <xacro:property name="sonar_fov" value="0.1"/>
+  <xacro:property name="sonar_rc" value="5"/>
+
+  <xacro:sonar_sensor name="sonar_front" parent="base_plate" ros_topic="sonar_front" update_rate="${sonar_ur}" min_range="${sonar_min_rng}" max_range="${sonar_max_rng}" field_of_view="${sonar_fov}" ray_count="${sonar_rc}">
+    <origin xyz="${wheelbase/2} 0 0" rpy="0 0 0"/>
+  </xacro:sonar_sensor>
+  <xacro:sonar_sensor name="sonar_left" parent="base_plate" ros_topic="sonar_left" update_rate="${sonar_ur}" min_range="${sonar_min_rng}" max_range="${sonar_max_rng}" field_of_view="${sonar_fov}" ray_count="${sonar_rc}">
+    <origin xyz="0 ${track/2} 0" rpy="0 0 ${M_PI/2}"/>
+  </xacro:sonar_sensor>
+  <xacro:sonar_sensor name="sonar_right" parent="base_plate" ros_topic="sonar_right" update_rate="${sonar_ur}" min_range="${sonar_min_rng}" max_range="${sonar_max_rng}" field_of_view="${sonar_fov}" ray_count="${sonar_rc}">
+    <origin xyz="0 -${track/2} 0" rpy="0 0 -${M_PI/2}"/>
+  </xacro:sonar_sensor>
+  <xacro:sonar_sensor name="sonar_back" parent="base_plate" ros_topic="sonar_back" update_rate="${sonar_ur}" min_range="${sonar_min_rng}" max_range="${sonar_max_rng}" field_of_view="${sonar_fov}" ray_count="${sonar_rc}">
+    <origin xyz="-${wheelbase/2} 0 0" rpy="0 0 ${M_PI}"/>
+  </xacro:sonar_sensor>
+
   <!-- Set method of motion control in Gazebo -->
   <gazebo>
     <plugin name="object_controller" filename="libgazebo_ros_planar_move.so">
@@ -108,7 +128,19 @@
       <odometryRate>10.0</odometryRate>
       <robotBaseFrame>base_footprint</robotBaseFrame>
     </plugin>
-  </gazebo>
 
+    <plugin name="magnetometer" filename="libhector_gazebo_ros_magnetic.so">
+      <updateRate>20.0</updateRate>
+      <robotNamespace>megabot</robotNamespace>
+      <bodyName>base_footprint</bodyName>
+      <drift>0 0 0</drift>
+      <driftFrequency>0 0 0</driftFrequency>
+      <gaussianNoise>0 0 0</gaussianNoise>
+      <!-- <referenceHeading>0.0</referenceHeading> -->
+      <!-- <declination>0</declination> -->
+      <!-- <inclination>0</inclination> -->
+      <!-- <offset>0 0 0</offset> -->
+    </plugin>
+  </gazebo>
 </robot>
 
