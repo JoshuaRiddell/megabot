@@ -62,7 +62,7 @@ void camera_info_callback(const sensor_msgs::CameraInfo& msg) {
  * Get centrepoint of balls in the passed image. Also render a debug image
  * if it is not empty.
  */
-void get_lines(std::vector<cv::Vec4f> &lines, cv::Mat &img, cv::Mat &debug) {
+void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &img, cv::Mat &debug) {
     cv::Mat hsv, bin;
 
     // get binary image using hsv thresholding
@@ -74,6 +74,7 @@ void get_lines(std::vector<cv::Vec4f> &lines, cv::Mat &img, cv::Mat &debug) {
     cv::findContours(bin, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
 
     // filter contours based on area
+    int n = 0;
     for( int i = 0; i< contours.size(); i++ )
     {
         // filter area
@@ -94,20 +95,45 @@ void get_lines(std::vector<cv::Vec4f> &lines, cv::Mat &img, cv::Mat &debug) {
         // fit line to points
         cv::Vec4f line;
         cv::fitLine(contours[i], line, cv::DIST_L2, 1.0, 0.01, 0.01);
-        lines.push_back(line);
+
+        // calculate points on the image extremeties for the line
+        float vx, vy, x, y;
+
+        vx = line[0];
+        vy = line[1];
+        x = line[2];
+        y = line[3];
+
+        cv::Point start, end;
+        int cols = img.cols;
+        int rows = img.rows;
+
+        if (abs(vx) > abs(vy)) {
+            // use horizontal method
+            std::cout << "horizontal" << std::endl;
+            float m = vy/vx;
+            start = cv::Point(0, (int)round(y - x*m));
+            end = cv::Point(cols-1, (int)round(y + (cols-x)*m));
+        } else {
+            // use vertical method
+            float m = vx/vy;
+            std::cout << "vertical" << std::endl;
+            start = cv::Point((int)round(x - y*m), 0);
+            end = cv::Point((int)round(x + (rows-y)*m), rows-1);
+        }
+
+        // add start and end to line list
+        std::vector<cv::Point> points;
+        points.push_back(start);
+        points.push_back(end);
+        line_points.push_back(points);
 
         // draw debug image if required
         if (!debug.empty()) {
             cv::Scalar color = cv::Scalar( 255, 255, 255 );
             cv::drawContours(debug, contours, i, color, 2, 8);
 
-            float vx, vy, x, y;
-            vx = line[0];
-            vy = line[1];
-            x = line[2];
-            y = line[3];
-            cv::line(debug, cv::Point(debug.cols-1, (int)round((debug.cols-x)*vy/vx)+y),
-                            cv::Point(0, (int)round((-x*vy/vx)+y)), color, 2, 8);
+            cv::line(debug, start, end, color, 2, 8);
         }
     }
 }
@@ -193,7 +219,7 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
 
     // get lines from image
     std::vector<cv::Vec4f> lines;
-    get_lines(lines, img, debug);
+    get_line_points(lines, img, debug);
 
     // // get origin and rotation of camera to transform ball locations
     // tf2::Quaternion rotation;

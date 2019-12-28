@@ -233,5 +233,5 @@ line:
     compressedDepth: {depth_max: 10.0, depth_quantization: 100.0, png_level: 9}
     theora: {keyframe_frequency: 64, optimize_for: 1, quality: 31, target_bitrate: 800000}
 line_locator: {area_high: 95000.0, area_low: 14000.0, circularity_high: 0.5, circularity_low: 0.02,
-  h_high: 255, h_low: 0, s_high: 255, s_low: 0, v_high: 153, v_low: 138}
+  h_high: 21, h_low: 0, s_high: 255, s_low: 0, v_high: 179, v_low: 141}
 magnetic: {drift: 0.0, drift_frequency: 0.0, gaussian_noise: 0.0, offset: 0.0, scale_error: 1.0}
