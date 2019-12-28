@@ -16,6 +16,9 @@
 // publisher for debug images
 image_transport::CameraPublisher debug_pub;
 
+// raw line point publisher
+ros::Publisher line_pub;
+
 // transform buffer
 tf2_ros::Buffer tf_buffer;
 
@@ -110,14 +113,12 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
 
         if (abs(vx) > abs(vy)) {
             // use horizontal method
-            std::cout << "horizontal" << std::endl;
             float m = vy/vx;
             start = cv::Point(0, (int)round(y - x*m));
             end = cv::Point(cols-1, (int)round(y + (cols-x)*m));
         } else {
             // use vertical method
             float m = vx/vy;
-            std::cout << "vertical" << std::endl;
             start = cv::Point((int)round(x - y*m), 0);
             end = cv::Point((int)round(x + (rows-y)*m), rows-1);
         }
@@ -138,32 +139,32 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
     }
 }
 
-// /*
-//  * Convert a centrepoint of a ball on an image to a location in 3D space using
-//  * transformation pass via rotation and origin.
-//  */
-// void centre_to_point(tf2::Quaternion rotation, tf2::Vector3 origin,
-//                      cv::Point &centre, geometry_msgs::Point &point) {
-//     // unit vector from camera origin to tennis ball point
-//     tf2::Vector3 v(
-//         1.0,
-//         -(centre.x - cx)/fx,
-//         -(centre.y - cy)/fy
-//     );
+/*
+ * Convert a centrepoint of a ball on an image to a location in 3D space using
+ * transformation pass via rotation and origin.
+ */
+void image_point_to_world(tf2::Quaternion rotation, tf2::Vector3 origin,
+                     cv::Point &centre, geometry_msgs::Point &point) {
+    // unit vector from camera origin to tennis ball point
+    tf2::Vector3 v(
+        1.0,
+        -(centre.x - cx)/fx,
+        -(centre.y - cy)/fy
+    );
 
-//     // rotate vector into map coordinate frame
-//     v = tf2::quatRotate(rotation, v);
+    // rotate vector into map coordinate frame
+    v = tf2::quatRotate(rotation, v);
 
-//     // intersect vector in map coordinate frame with ground plane at tennis ball height
-//     double factor = -(origin.getZ() - ball_radius) / v.getZ();
-//     double dx = factor * v.getX();
-//     double dy = factor * v.getY();
+    // intersect vector in map coordinate frame with ground plane at tennis ball height
+    double factor = -(origin.getZ()) / v.getZ();
+    double dx = factor * v.getX();
+    double dy = factor * v.getY();
 
-//     // export point at the intersection point (where ball is located)
-//     point.x = origin.getX() + dx;
-//     point.y = origin.getY() + dy;
-//     point.z = ball_radius;
-// }
+    // export point at the intersection point (where ball is located)
+    point.x = origin.getX() + dx;
+    point.y = origin.getY() + dy;
+    point.z = 0;
+}
 
 /*
  * Publish a debug image via ros.
@@ -218,57 +219,39 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
     }
 
     // get lines from image
-    std::vector<cv::Vec4f> lines;
+    std::vector<std::vector<cv::Point>> lines;
     get_line_points(lines, img, debug);
 
-    // // get origin and rotation of camera to transform ball locations
-    // tf2::Quaternion rotation;
-    // tf2::fromMsg(transformStamped.transform.rotation, rotation);
-    // tf2::Vector3 origin(
-    //     transformStamped.transform.translation.x,
-    //     transformStamped.transform.translation.y,
-    //     transformStamped.transform.translation.z
-    // );
+    // get origin and rotation of camera to transform ball locations
+    tf2::Quaternion rotation;
+    tf2::fromMsg(transformStamped.transform.rotation, rotation);
+    tf2::Vector3 origin(
+        transformStamped.transform.translation.x,
+        transformStamped.transform.translation.y,
+        transformStamped.transform.translation.z
+    );
 
-    // // convert all the centre points on the image to map frame, and publish
-    // geometry_msgs::PointStamped p;
-    // p.header.frame_id = "map";
-    // p.header.stamp = msg->header.stamp;
+    // convert all the centre points on the image to map frame, and publish
+    geometry_msgs::PoseStamped p;
+    p.header.frame_id = "map";
+    p.header.stamp = msg->header.stamp;
 
-    // geometry_msgs::PolygonStamped view_msg;
-    // view_msg.header.frame_id = "map";
-    // view_msg.header.stamp = msg->header.stamp;
+    auto line = lines.begin();
+    for (int i = 0; line != lines.end(); ++line) {
+        geometry_msgs::Point start, end;
 
-    // ball_msgs::BallView ball_view_msg;
-    // ball_view_msg.header.frame_id = "map";
-    // ball_view_msg.header.stamp = msg->header.stamp;
+        image_point_to_world(rotation, origin, line->at(0), start);
+        image_point_to_world(rotation, origin, line->at(1), end);
 
-    // for (int i = 0; i < centres.size(); ++i) {
-    //     centre_to_point(rotation, origin, centres[i], p.point);
-    //     ball_pub.publish(p);
-    //     ball_view_msg.locations.push_back(p.point);
-    // }
-
-    // // get bounds of camera view projected onto the ground
-    // std::vector<cv::Point> image_bounds;
-    // image_bounds.push_back(cv::Point(0.1*img.cols, 0.1*img.rows));
-    // image_bounds.push_back(cv::Point(0.9*img.cols, 0.1*img.rows));
-    // image_bounds.push_back(cv::Point(0.9*img.cols, 0.9*img.rows));
-    // image_bounds.push_back(cv::Point(0.1*img.cols, 0.9*img.rows));
-    // for (int i = 0; i < image_bounds.size(); ++i) {
-    //     geometry_msgs::Point p;
-    //     geometry_msgs::Point32 p32;
-    //     centre_to_point(rotation, origin, image_bounds[i], p);
-
-    //     ball_view_msg.camera_view.push_back(p);
-
-    //     p32.x = p.x;
-    //     p32.y = p.y;
-    //     p32.z = p.z;
-    //     view_msg.polygon.points.push_back(p32);
-    // }
-    // view_pub.publish(view_msg);
-    // ball_view_pub.publish(ball_view_msg);
+        p.pose.position = start;
+        
+        double angle = atan2(end.y-start.y, end.x-start.x);
+        tf2::Quaternion q;
+        q.setRPY(0, 0, angle);
+        p.pose.orientation = tf2::toMsg(q);
+        
+        line_pub.publish(p);
+    }
 
     // publish debug image if needed
     if (!debug.empty()) {
@@ -287,9 +270,7 @@ int main(int argc, char **argv)
     server.setCallback(config_callback);
     
     // publisher for ball positions
-    // ball_pub = n.advertise<geometry_msgs::PointStamped>("ball", 10);
-    // view_pub = n.advertise<geometry_msgs::PolygonStamped>("camera_view", 10);
-    // ball_view_pub = n.advertise<ball_msgs::BallView>("ball_view", 10);
+    line_pub = n.advertise<geometry_msgs::PoseStamped>("line", 10);
 
     // subscriber for camera image
     image_transport::ImageTransport it(n);
