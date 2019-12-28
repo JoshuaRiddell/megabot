@@ -1,0 +1,6 @@
+<launch>
+    <group ns="megabot">
+        <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
+        <node name="line_locator" pkg="line_locator" type="line_locator_node" output="screen"/>
+    </group>
+</launch>
