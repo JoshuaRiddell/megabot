@@ -3,7 +3,6 @@
 #include <visualization_msgs/Marker.h>
 #include <ball_msgs/BallView.h>
 #include <ball_msgs/BallMap.h>
-#include <geometry_extended_msgs/PointArray.h>
 
 std::list<BallTracker> ball_trackers;
 ros::Publisher ball_map_pub, ball_map_vis_pub;
