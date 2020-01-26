@@ -40,7 +40,7 @@
     <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>
 
     <!-- robot localisation nodes -->
-    <!-- <> -->
+    <node name="line_locator" pkg="line_locator" type="line_locator_node" output="screen"/>
     <node pkg="localisation" type="localisation_node" name="localisation" output="screen"/>
     
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
