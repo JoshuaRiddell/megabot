@@ -29,6 +29,7 @@ void cmd_vel_callback(const geometry_msgs::Twist& msg) {
 }
 
 void line_callback(const geometry_msgs::PoseStamped &msg) {
+    // unused
     tf2::Quaternion line_quat;
     tf2::convert(msg.pose.orientation, line_quat);
 
@@ -113,8 +114,6 @@ void line_callback(const geometry_msgs::PoseStamped &msg) {
     std::cout << 
             "; " << state.getOrigin().getX() << "," << state.getOrigin().getY() <<
             std::endl;
-
-
 }
 
 int main(int argc, char **argv)
@@ -126,7 +125,7 @@ int main(int argc, char **argv)
     ros::Rate r(20);
 
     ros::Subscriber sub = n.subscribe("/cmd_vel", 1, cmd_vel_callback);
-    ros::Subscriber line_sub = n.subscribe("line", 1, line_callback);
+    // ros::Subscriber line_sub = n.subscribe("line", 1, line_callback);
 
     geometry_msgs::TransformStamped transformStamped;
     transformStamped.header.frame_id = "map";
