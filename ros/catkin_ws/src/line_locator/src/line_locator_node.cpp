@@ -61,6 +61,38 @@ void camera_info_callback(const sensor_msgs::CameraInfo& msg) {
     cy = msg.K[5];
 }
 
+void draw_point(cv::Mat &img, cv::Point coordinate, cv::Scalar color) {
+    if (coordinate.y > img.rows / 10 &&
+            coordinate.y < img.rows - img.rows / 10 &&
+            coordinate.x > img.cols / 10 &&
+            coordinate.x < img.cols - img.cols / 10) {
+        cv::circle(img, coordinate, 10, color, -1);
+    }
+}
+
+cv::Point get_mean_point(cv::Mat &img, std::vector<cv::Point> coordinates) {
+    double xSum, ySum;
+    int n = 0;
+    xSum = ySum = 0;
+
+    for (auto coordinate = coordinates.begin(); coordinate != coordinates.end(); ++coordinate) {
+        if (coordinate->y > img.rows / 10 &&
+                coordinate->y < img.rows - img.rows / 10 &&
+                coordinate->x > img.cols / 10 &&
+                coordinate->x < img.cols - img.cols / 10) {
+            xSum += coordinate->x;
+            ySum += coordinate->y;
+            ++n;
+        }
+    }
+
+    if (n == 0) {
+        return cv::Point(-1, -1);
+    } else {
+        return cv::Point(xSum / n, ySum / n);
+    }
+}
+
 /*
  * Get centrepoint of balls in the passed image. Also render a debug image
  * if it is not empty.
@@ -80,15 +112,17 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
     int n = 0;
     for( int i = 0; i< contours.size(); i++ )
     {
+        std::vector<cv::Point> contour = contours[i];
+
         // filter area
-        double area = cv::contourArea(contours[i]);
+        double area = cv::contourArea(contour);
         if (area < area_low)
             continue;
         if (area > area_high)
             continue;
 
         // filter circularity
-        double perimeter = cv::arcLength(contours[i], true);
+        double perimeter = cv::arcLength(contour, true);
         double circularity = 4*area*M_PI/perimeter/perimeter;
         if (circularity < circularity_low)
             continue;
@@ -97,7 +131,36 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
 
         // fit line to points
         cv::Vec4f line;
-        cv::fitLine(contours[i], line, cv::DIST_L2, 1.0, 0.01, 0.01);
+        cv::fitLine(contour, line, cv::DIST_L2, 1.0, 0.01, 0.01);
+
+        cv::Point north, south, east, west;
+        north = south = east = west = contour[0];
+        for (auto point = contour.begin(); point != contour.end(); ++point) {
+            double x, y;
+            x = point->x;
+            y = point->y;
+
+            if (y < north.y) {
+                north = *point;
+            } else if (y > south.y) {
+                south = *point;
+            }
+
+            if (x < west.x) {
+                west = *point;
+            } else if (x > east.x) {
+                east = *point;
+            }
+        }
+
+        std::vector<cv::Point> endpointCoordinates;
+        endpointCoordinates.push_back(north);
+        endpointCoordinates.push_back(south);
+        endpointCoordinates.push_back(east);
+        endpointCoordinates.push_back(west);
+        cv::Point endpoint = get_mean_point(img, endpointCoordinates);
+
+        ROS_INFO("x:%d y:%d", endpoint.x, endpoint.y);
 
         // calculate points on the image extremeties for the line
         float vx, vy, x, y;
@@ -131,10 +194,11 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
 
         // draw debug image if required
         if (!debug.empty()) {
-            cv::Scalar color = cv::Scalar( 255, 255, 255 );
-            cv::drawContours(debug, contours, i, color, 2, 8);
-
-            cv::line(debug, start, end, color, 2, 8);
+            cv::Scalar white = cv::Scalar( 255, 255, 255 );
+            cv::Scalar blue = cv::Scalar( 255, 0, 0 );
+            cv::drawContours(debug, contours, i, white, 2, 8);
+            cv::line(debug, start, end, white, 2, 8);
+            cv::circle(debug, endpoint, 10, blue, -1);
         }
     }
 }
