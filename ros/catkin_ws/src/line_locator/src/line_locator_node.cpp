@@ -17,7 +17,7 @@
 image_transport::CameraPublisher debug_pub;
 
 // raw line point publisher
-ros::Publisher line_pub;
+ros::Publisher line_endpoint_pub;
 
 // transform buffer
 tf2_ros::Buffer tf_buffer;
@@ -159,8 +159,7 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
         endpointCoordinates.push_back(east);
         endpointCoordinates.push_back(west);
         cv::Point endpoint = get_mean_point(img, endpointCoordinates);
-
-        ROS_INFO("x:%d y:%d", endpoint.x, endpoint.y);
+        
 
         // calculate points on the image extremeties for the line
         float vx, vy, x, y;
@@ -190,6 +189,7 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
         std::vector<cv::Point> points;
         points.push_back(start);
         points.push_back(end);
+        points.push_back(endpoint);
         line_points.push_back(points);
 
         // draw debug image if required
@@ -302,19 +302,24 @@ void image_callback(const sensor_msgs::ImageConstPtr& msg)
 
     auto line = lines.begin();
     for (int i = 0; line != lines.end(); ++line) {
-        geometry_msgs::Point start, end;
+        geometry_msgs::Point start, end, endpoint;
+
+        if (line->at(2).x < 0 || line->at(2).y < 0) {
+            continue;
+        }
 
         image_point_to_world(rotation, origin, line->at(0), start);
         image_point_to_world(rotation, origin, line->at(1), end);
+        image_point_to_world(rotation, origin, line->at(2), endpoint);
 
-        p.pose.position = start;
-        
+        p.pose.position = endpoint;
+
         double angle = atan2(end.y-start.y, end.x-start.x);
         tf2::Quaternion q;
         q.setRPY(0, 0, angle);
         p.pose.orientation = tf2::toMsg(q);
-        
-        line_pub.publish(p);
+
+        line_endpoint_pub.publish(p);
     }
 
     // publish debug image if needed
@@ -334,7 +339,7 @@ int main(int argc, char **argv)
     server.setCallback(config_callback);
     
     // publisher for ball positions
-    line_pub = n.advertise<geometry_msgs::PoseStamped>("line", 10);
+    line_endpoint_pub = n.advertise<geometry_msgs::PoseStamped>("line_endpoint", 10);
 
     // subscriber for camera image
     image_transport::ImageTransport it(n);
