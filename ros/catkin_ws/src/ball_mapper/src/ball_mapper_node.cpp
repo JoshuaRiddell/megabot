@@ -96,7 +96,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     // ball location subscriber
-    ros::Subscriber ball_view_sub = n.subscribe("ball_view", 20, ball_view_callback);
+    ros::Subscriber ball_view_sub = n.subscribe("camera/balls", 20, ball_view_callback);
 
     // point array publisher
     ball_map_pub = n.advertise<ball_msgs::BallMap>("ball_map", 5);
