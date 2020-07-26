@@ -6,165 +6,127 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 
-tf2::Transform state;
-tf2::Transform increment;
-std::vector<tf2::Quaternion> map_line_quats;
-std::vector<tf2::Vector3> map_line_origins;
+std::vector<tf2::Quaternion> mapLineAngles;
+std::vector<tf2::Vector3> mapLineEnds;
+tf2::Transform mapToOdom;
+double movingAverageConstant = 0.2;
 
-void cmd_vel_callback(const geometry_msgs::Twist& msg) {
-    tf2::Quaternion q;
+void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
+    tf2::Quaternion measuredRotation;
+    tf2::Vector3 measuredEndpoint;
 
-    q.setRPY(
-        msg.angular.x / 20.,
-        msg.angular.y / 20.,
-        msg.angular.z / 20.
-    );
-    increment.setRotation(q);
+    tf2::convert(msg.pose.orientation, measuredRotation);
+    tf2::convert(msg.pose.position, measuredEndpoint);
 
-    increment.setOrigin(tf2::Vector3(
-        msg.linear.x / 20.,
-        msg.linear.y / 20.,
-        msg.linear.z / 20.
-    ));
+    double matchedThreshold = 0.2;
+
+    int matchedIndex = -1;
+    for (int i = 0; i < mapLineEnds.size(); ++i) {
+        double distance = tf2::tf2Distance(measuredEndpoint, mapLineEnds.at(i));
+
+        if (distance < matchedThreshold) {
+            matchedIndex = i;
+            break;
+        }
+    }
+
+    if (matchedIndex < 0) {
+        ROS_INFO("distance filtered");
+        return;
+    }
+
+    double matchedAngleThreshold = 0.15;
+    tf2::Quaternion matchedRotation = mapLineAngles.at(matchedIndex);
+
+    if (matchedRotation.angleShortestPath(measuredRotation) > M_PI_2) {
+        tf2::Quaternion flip;
+        flip.setRPY(0,0,-M_PI);
+        matchedRotation *= flip;
+    }
+
+    tf2::Quaternion angleDifference = matchedRotation * measuredRotation.inverse();
+
+    ROS_INFO("%f", angleDifference.getAngle());
+
+    if (angleDifference.getAngle() > matchedAngleThreshold) {
+        return;
+    }
+
+
+    tf2::Vector3 correctionOrigin = mapLineEnds.at(matchedIndex) - measuredEndpoint;
+    tf2::Quaternion correctionRotation = angleDifference;
+    
+    tf2::Vector3 currentOrigin = mapToOdom.getOrigin();
+    tf2::Quaternion currentRotation = mapToOdom.getRotation();
+
+    double c = movingAverageConstant;
+    double invC = 1-c;
+
+    currentOrigin.setX(correctionOrigin.x() * c + invC * currentOrigin.x());
+    currentOrigin.setY(correctionOrigin.y() * c + invC * currentOrigin.y());
+    currentOrigin.setZ(correctionOrigin.z() * c + invC * currentOrigin.z());
+    
+    double currentYaw = currentRotation.getAngle();
+    double correctionYaw = correctionRotation.getAngle();
+    currentYaw = correctionYaw * c + invC * currentYaw;
+    currentRotation.setRPY(0, 0, currentYaw);
+
+    mapToOdom.setOrigin(currentOrigin);
+    mapToOdom.setRotation(currentRotation);
 }
 
-void line_callback(const geometry_msgs::PoseStamped &msg) {
-    // unused
-    tf2::Quaternion line_quat;
-    tf2::convert(msg.pose.orientation, line_quat);
+void addLine(double x, double y, double angle) {
+    tf2::Quaternion qTmp;
+    mapLineEnds.push_back(tf2::Vector3(x, y, 0));
 
-    tf2::Vector3 line_position;
-    tf2::convert(msg.pose.position, line_position);
+    qTmp.setRPY(0, 0, angle);
+    mapLineAngles.push_back(qTmp);
+}
 
-    auto map_line_angle_it = map_line_quats.begin();
-    double minimum_angle = 999;
-    int closest_index = -1;
+void loadMapLines() {
+    // single vertical
+    addLine(1.2, 0, M_PI/2);
+    addLine(1.2, 1.2, M_PI/2);
 
-    for (; map_line_angle_it != map_line_quats.end(); ++map_line_angle_it) {
-        double angle = map_line_angle_it->angleShortestPath(line_quat);
-        
-        // check if the other direction is a shorter angle
-        if (M_PI - angle < angle) {
-            angle = M_PI - angle;
-        }
+    // left diagonal
+    addLine(0.71, 1.2, 2.094);
+    addLine(0.16, 2.143, 2.094);
 
-        if (angle < minimum_angle) {
-            closest_index = map_line_angle_it - map_line_quats.begin();
-            minimum_angle = angle;
-        }
-    }
-
-    tf2::Quaternion map_line_quat = map_line_quats[closest_index];
-    tf2::Vector3 map_line_origin = map_line_origins[closest_index];
-
-    // work in y/x gradients since most lines are close to vertical
-    double _, map_angle, line_angle;
-
-    tf2::Matrix3x3(map_line_quat).getRPY(_, _, map_angle);
-    double m1_inv = tan(M_PI_2 - map_angle);
-    double xc1 = map_line_origin.getX() - map_line_origin.getY() * m1_inv;
-
-    tf2::Matrix3x3(line_quat).getRPY(_, _, line_angle);
-    double m2_inv = tan(M_PI_2 - line_angle);
-    double xc2 = line_position.getX() - line_position.getY() * m2_inv;
-
-    double y = (xc2 - xc1) / (m1_inv - m2_inv);
-    double x = y * m1_inv + xc1;
-
-    double angle_diff = map_angle - line_angle;
-    if (angle_diff > M_PI_2) {
-        angle_diff = M_PI - angle_diff;
-    }
-    
-    tf2::Quaternion q;
-    q.setRPY(0,0,angle_diff);
-
-    tf2::Vector3 tmp = state.getOrigin() - tf2::Vector3(x,y,0);
-    tf2::Matrix3x3 rot;
-    rot.setRPY(0,0,angle_diff);
-    tf2::Vector3 tmp2 = rot * tmp;
-    
-    tf2::Transform inc;
-    tf2::Vector3 diff = tmp2 - tmp;
-    inc.setOrigin(diff);
-    inc.setRotation(q);
-
-    std::cout << closest_index << "," << angle_diff <<
-            // "; x1=y*" << m1_inv << "+" << xc1 <<
-            "; x2=y*" << m2_inv << "+" << xc2 <<
-            "; " << diff.getX() << "," << diff.getY() <<
-            "; " << state.getOrigin().getX() << "," << state.getOrigin().getY();
-            // "; int: " << x << "," << y << 
-            // std::endl;
-
-    // if the angle difference is too large this method becomes unstable
-    if (minimum_angle > M_PI_4) {
-        std::cout << std::endl;
-        return;
-    }
-
-    // if minimum angle is too small we're already close enough
-    if (minimum_angle < 0.05) {
-        std::cout << std::endl;
-        return;
-    }
-
-    state *= inc;
-
-    std::cout << 
-            "; " << state.getOrigin().getX() << "," << state.getOrigin().getY() <<
-            std::endl;
+    // right diagonal
+    addLine(2.24, 2.143, 1.0472);
+    addLine(1.69, 1.2, 1.0472);
 }
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "localisation");
-    tf2_ros::TransformBroadcaster br;
 
-    ros::NodeHandle n;
-    ros::Rate r(20);
+    ros::NodeHandle nh;
+    ros::Rate r(10);
 
-    ros::Subscriber sub = n.subscribe("/cmd_vel", 1, cmd_vel_callback);
-    // ros::Subscriber line_sub = n.subscribe("line", 1, line_callback);
+    tf2_ros::TransformBroadcaster transformBroadcaster;
+
+    ros::Subscriber line_sub = nh.subscribe("line_endpoint", 1, lineEndpointCallback);
 
     geometry_msgs::TransformStamped transformStamped;
     transformStamped.header.frame_id = "map";
-    transformStamped.child_frame_id = "base_link";
+    transformStamped.child_frame_id = "odom";
 
-    // load in lines on the map
-    tf2::Quaternion q_tmp;
-    q_tmp.setRPY(0, 0, M_PI/2);
-    map_line_quats.push_back(q_tmp);
-    q_tmp.setRPY(0, 0, -M_PI/4);
-    map_line_quats.push_back(q_tmp);
-    q_tmp.setRPY(0, 0, -3*M_PI/4);
-    map_line_quats.push_back(q_tmp);
-
-    map_line_origins.push_back(tf2::Vector3(1.2, 0, 0));
-    map_line_origins.push_back(tf2::Vector3(0, 2.4, 0));
-    map_line_origins.push_back(tf2::Vector3(2.4, 0, 0));
-
-    // setup initial state transform
+    loadMapLines();
+    
     tf2::Quaternion q;
-    q.setRPY(0, 0, M_PI_2);
-    state.setOrigin(tf2::Vector3(1.2, 0.265, 0));
-    state.setRotation(q);
-
-    // setup initial increment transform
-    q.setRPY(0,0,0);
-    increment.setOrigin(tf2::Vector3(0,0,0));
-    increment.setRotation(q);
+    q.setRPY(0, 0, 0);
+    mapToOdom.setOrigin(tf2::Vector3(0, 0, 0));
+    mapToOdom.setRotation(q);
 
     while (ros::ok())
     {
         ros::spinOnce();
 
-        state *= increment;
-
         transformStamped.header.stamp = ros::Time::now();
-        transformStamped.transform = tf2::toMsg(state);
+        transformStamped.transform = tf2::toMsg(mapToOdom);
 
-        br.sendTransform(transformStamped);
+        transformBroadcaster.sendTransform(transformStamped);
         r.sleep();
     }
 

@@ -1,0 +1,6 @@
+<launch>
+    <group ns="megabot">
+        <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
+        <node name="localisation" pkg="localisation" type="localisation_node" output="screen"/>
+    </group>
+</launch>
