@@ -24,9 +24,10 @@ void setup() {
 
 void loop() {
 	nh.spinOnce();
-	HAL_Delay(10);
+	HAL_Delay(500);
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 }
 
 void ledCallback(const std_msgs::UInt8& msg) {
-	HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_3);
+	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 }
