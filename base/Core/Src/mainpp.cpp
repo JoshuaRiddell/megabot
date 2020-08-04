@@ -2,12 +2,12 @@
 #include <stm32f4xx_hal.h>
 #include <stm32f4xx_hal_conf.h>
 #include <ros.h>
-#include <std_msgs/UInt8.h>
+#include <std_msgs/Empty.h>
 
 ros::NodeHandle nh;
 
-void ledCallback(const std_msgs::UInt8& msg);
-ros::Subscriber<std_msgs::UInt8> ledSub("led", &ledCallback);
+void ledCallback(const std_msgs::Empty& msg);
+ros::Subscriber<std_msgs::Empty> ledSub("led", &ledCallback);
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
   nh.getHardware()->flush();
@@ -24,10 +24,10 @@ void setup() {
 
 void loop() {
 	nh.spinOnce();
-	HAL_Delay(500);
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+	HAL_Delay(50);
+	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 }
 
-void ledCallback(const std_msgs::UInt8& msg) {
-	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
+void ledCallback(const std_msgs::Empty& msg) {
+	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 }

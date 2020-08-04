@@ -32,7 +32,7 @@ Core/Src/mainpp.o: ../Core/Src/mainpp.cpp ../Core/Inc/mainpp.h \
  ../Core/Inc/rosserial_msgs/RequestParam.h ../Core/Inc/ros/publisher.h \
  ../Core/Inc/ros/node_handle.h ../Core/Inc/ros/subscriber.h \
  ../Core/Inc/ros/service_server.h ../Core/Inc/ros/service_client.h \
- ../Core/Inc/STM32Hardware.h ../Core/Inc/std_msgs/UInt8.h
+ ../Core/Inc/STM32Hardware.h ../Core/Inc/std_msgs/Empty.h
 
 ../Core/Inc/mainpp.h:
 
@@ -118,4 +118,4 @@ Core/Src/mainpp.o: ../Core/Src/mainpp.cpp ../Core/Inc/mainpp.h \
 
 ../Core/Inc/STM32Hardware.h:
 
-../Core/Inc/std_msgs/UInt8.h:
+../Core/Inc/std_msgs/Empty.h:
