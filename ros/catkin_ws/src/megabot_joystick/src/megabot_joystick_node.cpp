@@ -97,9 +97,9 @@ int main(int argc, char **argv) {
     ros::Subscriber joySub = nh.subscribe("/joy", 1, &joystickCallback);
 
     cmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
-    lifterPub = nh.advertise<std_msgs::Int8>("/megabot/lifter/lift", 1, true);
-    grabberLeftPub = nh.advertise<std_msgs::Int8>("/megabot/lifter/grabber_left", 1, true);
-    grabberRightPub = nh.advertise<std_msgs::Int8>("/megabot/lifter/grabber_right", 1, true);
+    lifterPub = nh.advertise<std_msgs::Int8>("lifter/lift", 1, true);
+    grabberLeftPub = nh.advertise<std_msgs::Int8>("lifter/grabber_left", 1, true);
+    grabberRightPub = nh.advertise<std_msgs::Int8>("lifter/grabber_right", 1, true);
 
     ros::spin();
 

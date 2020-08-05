@@ -18,11 +18,11 @@ void reconfigureCallback(lifter_controller::LifterConfig &config, uint32_t level
 void lifterLiftCallback(const std_msgs::Int8 &msg) {
     if (msg.data == 1) {
         std_msgs::Int16 stepper;
-        stepper.data = lifterConfig.speed;
+        stepper.data = 1;
         stepperPub.publish(stepper);
     } else if (msg.data == -1) {
         std_msgs::Int16 stepper;
-        stepper.data = -lifterConfig.speed;
+        stepper.data = -1;
         stepperPub.publish(stepper);
     }
 }
