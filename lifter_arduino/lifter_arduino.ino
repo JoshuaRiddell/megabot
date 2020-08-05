@@ -36,12 +36,12 @@ void setupStepper();
 
 void leftGripperCb(const std_msgs::Int16& msg);
 void rightGripperCb(const std_msgs::Int16& msg);
-void stepperCb(const std_msgs::Int8& msg);
+void stepperCb(const std_msgs::Int16& msg);
 
 ros::NodeHandle nh;
-ros::Subscriber<std_msgs::Int16> leftGripperSub("lifter/gripper_left", leftGripperCb);
-ros::Subscriber<std_msgs::Int16> rightGripperSub("lifter/gripper_right", rightGripperCb);
-ros::Subscriber<std_msgs::Int8> stepperSub("lifter/stepper", stepperCb);
+ros::Subscriber<std_msgs::Int16> leftGripperSub("lifter/servo_left", leftGripperCb);
+ros::Subscriber<std_msgs::Int16> rightGripperSub("lifter/servo_right", rightGripperCb);
+ros::Subscriber<std_msgs::Int16> stepperSub("lifter/stepper", stepperCb);
 
 void leftGripperCb(const std_msgs::Int16& msg) {
   leftGripper.write(msg.data);
@@ -51,27 +51,31 @@ void rightGripperCb(const std_msgs::Int16& msg) {
   rightGripper.write(msg.data);
 }
 
-void stepperCb(const std_msgs::Int8& msg) {
+void stepperCb(const std_msgs::Int16& msg) {
   switch (msg.data) {
     case STEPPER_DOWN:
       digitalWrite(stepperDirPin, HIGH);
       currentEndPin = stepperDownEndPin;
-      Timer1.start();
       break;
     case STEPPER_STOP:
-      Timer1.stop();
       break;
     case STEPPER_UP:
       digitalWrite(stepperDirPin, LOW);
       currentEndPin = stepperUpEndPin;
-      Timer1.start();
       break;
   }
 }
 
 void toggleStep() {
   if (!digitalRead(currentEndPin)) {
-    digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
+    for (int i = 0; i < 100; ++i) {
+      digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
+      delayMicroseconds(100);
+      digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
+      delayMicroseconds(100);
+    }
+  } else {
+    delay(10);
   }
 }
 
@@ -79,10 +83,6 @@ void setup() {
   nh.initNode();
   setupGrippers();
   setupStepper();
-
-  Timer1.initialize(100);
-  Timer1.attachInterrupt(toggleStep);
-  Timer1.stop();
 }
 
 void setupGrippers() {
@@ -104,11 +104,12 @@ void setupStepper() {
 
   digitalWrite(stepperDirPin, LOW);
   digitalWrite(stepperStepPin, LOW);
+  currentEndPin = stepperUpEndPin;
 
   nh.subscribe(stepperSub);
 }
 
 void loop() {
   nh.spinOnce();
-  delay(1);
+  toggleStep();
 }
