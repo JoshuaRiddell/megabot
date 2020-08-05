@@ -2,5 +2,5 @@
 	path = ros/catkin_ws/src/rosserial_stm32
 	url = https://github.com/yoneken/rosserial_stm32.git
 [submodule "base/Core/Inc/omni_bot"]
-	path = base/Core/Inc/omni_bot
+	path = base/Core/Src/omni_bot
 	url = git@github.com:JoshuaRiddell/omni_bot.git
