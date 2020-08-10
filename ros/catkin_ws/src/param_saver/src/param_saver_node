@@ -1,0 +1,29 @@
+#!/usr/bin/env python
+
+import roslaunch
+import rospy
+from os import system, popen
+
+def main():
+    rospy.init_node("param_saver")
+
+    rate = rospy.Rate(0.1)
+
+    uuid = roslaunch.rlutil.get_or_generate_uuid(None, True)
+    roslaunch.configure_logging(uuid)
+
+    base_path = popen("rospack find megabot").read().strip()
+
+    commands = [
+        "rosparam dump {}/params/megabot.yaml /megabot".format(base_path),
+    ]
+
+    while not rospy.is_shutdown():
+        for command in commands:
+            system(command)
+
+        rate.sleep()
+
+
+if __name__ == "__main__":
+    main()
