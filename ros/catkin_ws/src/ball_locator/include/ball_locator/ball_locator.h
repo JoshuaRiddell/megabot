@@ -28,6 +28,7 @@ private:
 
     cv::Scalar hsvLowThreshold = cv::Scalar(0,0,0);
     cv::Scalar hsvHighThreshold = cv::Scalar(255,255,255);
+    cv::Mat thresholdedImage;
     float areaLowThreshold = 0;
     float areaHighThreshold = 1000000;
     float circularityLowThreshold = 0;

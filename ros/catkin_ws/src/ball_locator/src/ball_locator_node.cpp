@@ -196,38 +196,3 @@ tf2::Transform getCameraTransform() {
     return cameraTransform;
 }
 
-//     // project centres to ground plane
-//     // publish ball locations
-
-//     // get bounds of camera view projected onto the ground
-//     std::vector<cv::Point> image_bounds;
-//     image_bounds.push_back(cv::Point(0.1*img.cols, 0.1*img.rows));
-//     image_bounds.push_back(cv::Point(0.9*img.cols, 0.1*img.rows));
-//     image_bounds.push_back(cv::Point(0.9*img.cols, 0.9*img.rows));
-//     image_bounds.push_back(cv::Point(0.1*img.cols, 0.9*img.rows));
-//     for (int i = 0; i < image_bounds.size(); ++i) {
-//         geometry_msgs::Point p;
-//         geometry_msgs::Point32 p32;
-
-//         tf2::Vector3 coordinate = coordinateTransformer.projectImagePointToGroundPlane(centres[i]);
-//         tf2::toMsg(coordinate, p);
-
-//         ball_view_msg.locations.push_back(p);
-//         ball_view_msg.camera_view.push_back(p);
-
-//         p32.x = p.x;
-//         p32.y = p.y;
-//         p32.z = p.z;
-//         view_msg.polygon.points.push_back(p32);
-//     }
-//     cameraViewPolyPub.publish(view_msg);
-//     ballCentresPub.publish(ball_view_msg);
-
-//     // publish debug image if needed
-//     if (!debug.empty()) {
-//         publishDebugImage(debug);
-//     }
-// }
-
-
-
