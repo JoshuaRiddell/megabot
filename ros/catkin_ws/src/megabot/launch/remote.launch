@@ -1,0 +1,50 @@
+<launch>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find megabot)/map/map.yaml" />
+    <node name="costmap_2d" pkg="costmap_2d" type="costmap_2d_node">
+        <rosparam ns="costmap" command="load" file="$(find megabot)/map/costmap.yaml"/>
+    </node>
+    <node name="param_saver" pkg="param_saver" type="param_saver_node"/>
+
+    <node pkg="joy" type="joy_node" name="joy_node"/>
+    <node pkg="megabot_joystick" type="megabot_joystick_node" name="megabot_joystick"/>
+
+    <param name="ball_description" command="cat $(find megabot)/urdf/tennis_ball.urdf"/>
+
+    <group ns="megabot">
+        <machine name="pi" address="10.0.0.200" user="megabot" env-loader="/home/megabot/.rosenv"/>
+        <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
+        <param name="description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
+
+        <node name="camera" pkg="usb_cam" type="usb_cam_node" machine="pi" >
+            <param name="video_device" value="/dev/video0" />
+            <param name="image_width" value="432" />
+            <param name="image_height" value="240" />
+            <param name="pixel_format" value="yuyv" />
+            <param name="camera_frame_id" value="camera_link" />
+            <param name="camera_name" value="camera"/>
+            <param name="io_method" value="mmap"/>
+            <param name="framerate" value="10"/>
+        </node>
+        <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
+
+        <node pkg="rosserial_server" type="serial_node" name="rosserial_server_base" machine="pi">
+            <param name="port" value="/dev/ttyAMA4" />
+        </node>
+        <node pkg="rosserial_server" type="serial_node" name="rosserial_server_lifter" machine="pi">
+            <param name="port" value="/dev/ttyAMA1" />
+        </node>
+
+        <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
+        <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>
+
+        <node name="line_locator" pkg="line_locator" type="line_locator_node" output="screen"/>
+        <node pkg="localisation" type="localisation_node" name="localisation" output="screen"/>
+
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
+            <remap from="robot_description" to="description" />
+            <remap from="joint_states" to="joint_states" />
+        </node>
+
+        <node pkg="ball_locator" type="ball_locator_node" name="ball_locator" machine="pi"/>
+    </group>    
+</launch>

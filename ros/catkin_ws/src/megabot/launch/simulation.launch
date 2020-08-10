@@ -16,24 +16,7 @@
     <!-- megabot robot description -->
     <param name="description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
 
-    <!-- camera nodes -->
-    <group ns="camera">
-      <!-- camera nodelet -->
-      <node pkg="nodelet" type="nodelet" name="image_proc_nodelet"  args="manager"/>
-
-      <!-- raw image processing -->
-      <node pkg="nodelet" type="nodelet" name="debayer"
-            args="load image_proc/debayer image_proc_nodelet"
-            respawn="true" />
-            
-      <!-- colour rectified image -->
-      <node pkg="nodelet" type="nodelet" name="rectify_color"
-            args="load image_proc/rectify image_proc_nodelet"
-            respawn="true">
-        <remap from="image_mono" to="image_color" />
-        <remap from="image_rect" to="image_rect_color" />
-      </node>
-    </group>
+    <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
 
     <!-- ball finding nodes -->
     <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
