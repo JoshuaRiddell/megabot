@@ -41,11 +41,13 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
             break;
         }
 
+
         geometry_msgs::TransformStamped robotTransformMsg;
         robotTransformMsg = tfBuffer.lookupTransform(goal->target_frame.data, goal->reference_frame.data, ros::Time::now(), ros::Duration(1.0));
 
         tf2::Transform robotTransform;
         tf2::fromMsg(robotTransformMsg.transform, robotTransform);
+
 
         double robotY = robotTransform.getOrigin().getY();
         double targetY = goal->point.y;
@@ -56,8 +58,8 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
 
         geometry_msgs::Twist cmdVel;
         cmdVel.angular.z = 0;
-        cmdVel.linear.x = 0;
-        cmdVel.linear.y = speed;
+        cmdVel.linear.x = speed;
+        cmdVel.linear.y = 0;
         cmdVelPub.publish(cmdVel);
     }
 
@@ -65,6 +67,12 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
     {
         actionServer.setSucceeded();
     }
+
+    geometry_msgs::Twist cmdVel;
+    cmdVel.angular.z = 0;
+    cmdVel.linear.x = 0;
+    cmdVel.linear.y = 0;
+    cmdVelPub.publish(cmdVel);
 }
 
 // calculate angular difference between robot and goal
@@ -105,6 +113,8 @@ int main(int argc, char **argv)
     ros::NodeHandle nh;
 
     cmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
+
+    GotoPointAction gotoPointAction("goto_point");
 
     ros::spin();
 
