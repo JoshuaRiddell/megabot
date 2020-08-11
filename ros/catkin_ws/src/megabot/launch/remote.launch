@@ -1,9 +1,9 @@
 <launch>
     <node name="map_server" pkg="map_server" type="map_server" args="$(find megabot)/map/map.yaml" />
-    <node name="costmap_2d" pkg="costmap_2d" type="costmap_2d_node">
+    <!-- <node name="costmap_2d" pkg="costmap_2d" type="costmap_2d_node">
         <rosparam ns="costmap" command="load" file="$(find megabot)/map/costmap.yaml"/>
-    </node>
-    <node name="param_saver" pkg="param_saver" type="param_saver_node"/>
+    </node> -->
+    <node name="param_saver" pkg="param_saver" type="param_saver_node" output="screen"/>
 
     <node pkg="joy" type="joy_node" name="joy_node"/>
     <node pkg="megabot_joystick" type="megabot_joystick_node" name="megabot_joystick"/>
@@ -33,18 +33,20 @@
         <node pkg="rosserial_server" type="serial_node" name="rosserial_server_lifter" machine="pi">
             <param name="port" value="/dev/ttyAMA1" />
         </node>
+        <node pkg="lifter_controller" type="lifter_controller_node" name="lifter_controller" machine="pi" />
 
-        <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
-        <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>
+        <node pkg="ball_locator" type="ball_locator_node" name="ball_locator" machine="pi"/>
+        <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" machine="pi"/>
 
-        <node name="line_locator" pkg="line_locator" type="line_locator_node" output="screen"/>
-        <node pkg="localisation" type="localisation_node" name="localisation" output="screen"/>
+        <!-- <node name="line_locator" pkg="line_locator" type="line_locator_node" machine="pi"/> -->
+        <node pkg="localisation" type="localisation_node" name="localisation" machine="pi"/>
+        <node pkg="odometry" type="odometry_node" name="odometry" machine="pi"/>
+        <!-- <node pkh -->
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
             <remap from="robot_description" to="description" />
             <remap from="joint_states" to="joint_states" />
         </node>
 
-        <node pkg="ball_locator" type="ball_locator_node" name="ball_locator" machine="pi"/>
     </group>    
 </launch>

@@ -41,11 +41,11 @@ int main(int argc, char **argv)
     increment.setOrigin(tf2::Vector3(0,0,0));
     increment.setRotation(q);
 
-    ros::Subscriber sub = n.subscribe("/cmd_vel", 1, cmdVelCallback);
+    ros::Subscriber sub = n.subscribe("cmd_vel", 1, cmdVelCallback);
 
     geometry_msgs::TransformStamped transformStamped;
     transformStamped.header.frame_id = "odom";
-    transformStamped.child_frame_id = "base_link";
+    transformStamped.child_frame_id = "base_footprint";
 
     // setup initial state transform
     tf2::Transform state;

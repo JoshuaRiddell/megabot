@@ -55,5 +55,3 @@ CATKIN_IGNORE
 Debug/
 .mxproject
 .settings
-
-base_controller

@@ -20,6 +20,7 @@ def main():
 
     while not rospy.is_shutdown():
         for command in commands:
+            rospy.loginfo(command)
             system(command)
 
         rate.sleep()

@@ -49,7 +49,7 @@ void publishCmdVel(const sensor_msgs::Joy& msg) {
 
     cmdVel.linear.x = -msg.axes[AXIS_LEFT_HORIZONTAL] * 0.25;
     cmdVel.linear.y = msg.axes[AXIS_LEFT_VERTICAL] * 0.25;
-    cmdVel.angular.z = msg.axes[AXIS_RIGHT_HORIZONTAL] * 0.1;
+    cmdVel.angular.z = msg.axes[AXIS_RIGHT_HORIZONTAL] * 0.3;
 
     cmdVelPub.publish(cmdVel);
 }
@@ -96,10 +96,10 @@ int main(int argc, char **argv) {
 
     ros::Subscriber joySub = nh.subscribe("/joy", 1, &joystickCallback);
 
-    cmdVelPub = nh.advertise<geometry_msgs::Twist>("/cmd_vel", 1, true);
-    lifterPub = nh.advertise<std_msgs::Int8>("lifter/lift", 1, true);
-    grabberLeftPub = nh.advertise<std_msgs::Int8>("lifter/grabber_left", 1, true);
-    grabberRightPub = nh.advertise<std_msgs::Int8>("lifter/grabber_right", 1, true);
+    cmdVelPub = nh.advertise<geometry_msgs::Twist>("/megabot/cmd_vel", 1, true);
+    lifterPub = nh.advertise<std_msgs::Int8>("/megabot/lifter/lift", 1, true);
+    grabberLeftPub = nh.advertise<std_msgs::Int8>("/megabot/lifter/grabber_left", 1, true);
+    grabberRightPub = nh.advertise<std_msgs::Int8>("/megabot/lifter/grabber_right", 1, true);
 
     ros::spin();
 

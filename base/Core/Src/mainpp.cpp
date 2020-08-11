@@ -37,5 +37,5 @@ void loop() {
 
 void cmdVelCallback(const geometry_msgs::Twist& msg) {
 	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
-	move_robot(msg.linear.x*400, msg.linear.y*400, msg.angular.z*700);
+	move_robot(msg.linear.x*314, msg.linear.y*314, msg.angular.z*72);
 }

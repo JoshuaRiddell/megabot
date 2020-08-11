@@ -92,10 +92,10 @@
   </xacro:megabot_wheel>
 
   <!-- Camera parameters -->
-  <xacro:property name="camera_size" value="0.03" /> <!-- Size of square 'camera' box -->
-  <xacro:property name="camera_front_offset" value="0.1" /> <!-- Size of square 'camera' box -->
-  <xacro:property name="camera_height" value="0.4" /> <!-- Size of square 'camera' box -->
-  <xacro:property name="camera_pitch" value="0.8" /> <!-- Size of square 'camera' box -->
+  <xacro:property name="camera_size" value="0.03" />
+  <xacro:property name="camera_front_offset" value="0.185" />
+  <xacro:property name="camera_height" value="0.43" />
+  <xacro:property name="camera_pitch" value="1.22" />
 
   <!-- Add camera via macros -->
   <xacro:megabot_camera />
