@@ -32,13 +32,16 @@ include_directories(
 )
 
 add_library(speed_curve src/base_controller/speed_curve.cpp)
+add_library(acceleration_limiter src/base_controller/acceleration_limiter.cpp)
 add_executable(${PROJECT_NAME}_node src/base_controller_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
 
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
   speed_curve
+  acceleration_limiter
 )
 target_link_libraries(speed_curve ${catkin_LIBRARIES})
+target_link_libraries(acceleration_limiter ${catkin_LIBRARIES})
 
 

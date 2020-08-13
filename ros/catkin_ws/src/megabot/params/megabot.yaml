@@ -14,14 +14,14 @@ ball:
       quality: 31
       target_bitrate: 800000
 ball_locator:
-  area_high: 21000.0
-  area_low: 200.0
+  area_high: 36000.0
+  area_low: 100.0
   circularity_high: 1.0
-  circularity_low: 0.41
-  h_high: 39
-  h_low: 20
+  circularity_low: 0.47
+  h_high: 49
+  h_low: 19
   s_high: 255
-  s_low: 29
+  s_low: 95
   v_high: 255
   v_low: 0
 camera:

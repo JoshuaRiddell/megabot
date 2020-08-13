@@ -11,9 +11,9 @@
     <param name="ball_description" command="cat $(find megabot)/urdf/tennis_ball.urdf"/>
 
     <group ns="megabot">
-        <machine name="pi" address="10.0.0.200" user="megabot" env-loader="/home/megabot/.rosenv"/>
-        <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
-        <param name="description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
+        <machine name="pi" address="192.168.0.100" user="megabot" env-loader="/home/megabot/.rosenv"/>
+        <rosparam command="load" file="$(find megabot)/params/megabot.yaml"/>
+        <param name="description" command="$(find xacro)/xacro $(find megabot)/urdf/megabot.urdf.xacro"/>
 
         <node name="camera" pkg="usb_cam" type="usb_cam_node" machine="pi" >
             <param name="video_device" value="/dev/video0" />
@@ -41,12 +41,11 @@
         <!-- <node name="line_locator" pkg="line_locator" type="line_locator_node" machine="pi"/> -->
         <node pkg="localisation" type="localisation_node" name="localisation" machine="pi"/>
         <node pkg="odometry" type="odometry_node" name="odometry" machine="pi"/>
-        <!-- <node pkh -->
+        <node pkg="base_controller" type="base_controller_node" name="base_controller" machine="pi"/>
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
             <remap from="robot_description" to="description" />
             <remap from="joint_states" to="joint_states" />
         </node>
-
     </group>    
 </launch>

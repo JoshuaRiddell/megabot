@@ -47,8 +47,8 @@ void joystickCallback(const sensor_msgs::Joy& msg) {
 void publishCmdVel(const sensor_msgs::Joy& msg) {
     geometry_msgs::Twist cmdVel;
 
-    cmdVel.linear.x = -msg.axes[AXIS_LEFT_HORIZONTAL] * 0.25;
-    cmdVel.linear.y = msg.axes[AXIS_LEFT_VERTICAL] * 0.25;
+    cmdVel.linear.x = msg.axes[AXIS_LEFT_VERTICAL] * 0.25;
+    cmdVel.linear.y = msg.axes[AXIS_LEFT_HORIZONTAL] * 0.25;
     cmdVel.angular.z = msg.axes[AXIS_RIGHT_HORIZONTAL] * 0.3;
 
     cmdVelPub.publish(cmdVel);

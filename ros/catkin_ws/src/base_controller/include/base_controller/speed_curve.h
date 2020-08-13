@@ -1,18 +1,26 @@
 class SpeedCurve
 {
 public:
-    SpeedCurve(float acceleration, float maxSpeed, float loopPeriod);
-    void setTargetDistance(float distance);
-    float getNextSpeed();
+    SpeedCurve();
+    void setAcceleration(double acceleration);
+    void setMinSpeed(double minSpeed);
+    void setMaxSpeed(double maxSpeed);
+    void setLoopPeriod(double loopPeriod);
+
+    void setTargetDistance(double distance);
+    double getNextSpeed();
 
 private:
-    float currentSpeed;
-    float targetSpeed;
-    float loopPeriod;
+    void calculateSpeedDistanceGradient();
 
-    float acceleration;
-    float maxSpeed;
-    float timeToMaxSpeed;
-    float distanceTomaxSpeed;
-    float speedDistanceGradient;
+    double currentSpeed;
+    double targetSpeed;
+    double loopPeriod;
+
+    double acceleration;
+    double minSpeed;
+    double maxSpeed;
+    double timeToMaxSpeed;
+    double distanceTomaxSpeed;
+    double speedDistanceGradient;
 };
