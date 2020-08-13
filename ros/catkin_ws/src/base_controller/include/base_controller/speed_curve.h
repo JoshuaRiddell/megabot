@@ -20,7 +20,4 @@ private:
     double acceleration;
     double minSpeed;
     double maxSpeed;
-    double timeToMaxSpeed;
-    double distanceTomaxSpeed;
-    double speedDistanceGradient;
 };

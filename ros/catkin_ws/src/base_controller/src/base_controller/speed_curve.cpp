@@ -1,5 +1,6 @@
 #include <base_controller/speed_curve.h>
 #include <algorithm>
+#include <math.h>
 
 SpeedCurve::SpeedCurve()
     : acceleration(0.1), minSpeed(0.05), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
@@ -30,16 +31,9 @@ void SpeedCurve::setLoopPeriod(double loopPeriod)
     this->loopPeriod = loopPeriod;
 }
 
-void SpeedCurve::calculateSpeedDistanceGradient()
-{
-    timeToMaxSpeed = maxSpeed / acceleration;
-    distanceTomaxSpeed = 0.5 * acceleration * timeToMaxSpeed * timeToMaxSpeed;
-    speedDistanceGradient = maxSpeed / distanceTomaxSpeed;
-}
-
 void SpeedCurve::setTargetDistance(double distance)
 {
-    targetSpeed = std::min(maxSpeed, distance * speedDistanceGradient);
+    targetSpeed = std::min(maxSpeed, sqrt(2 * acceleration * distance));
 }
 
 double SpeedCurve::getNextSpeed()
