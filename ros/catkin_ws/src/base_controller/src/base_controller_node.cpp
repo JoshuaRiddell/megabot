@@ -78,16 +78,13 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
         tf2::fromMsg(goal->point, goalPoint);
 
         tf2::Vector3 displacement = goalPoint - robotTransform.getOrigin();
+        displacement.setZ(0);
 
         double distance = displacement.length();
         translationSpeedCurve.setTargetDistance(distance);
         double speed = translationSpeedCurve.getNextSpeed();
 
-        ROS_INFO("speed:%f", speed);
-        ROS_INFO("displacement:%f,%f,%f", displacement.getX(), displacement.getY(), displacement.getZ());
-
         accelerationLimiter.setTargetSpeedDirection(speed, displacement);
-        
 
         tf2::Vector3 velocity = accelerationLimiter.getNextVelocity();
         tf2::Transform robotRotation;
@@ -95,7 +92,7 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
         robotRotation.setRotation(robotTransform.getRotation().inverse());
         velocity = robotRotation * velocity;
 
-        if (fabs(distance) < 0.001)
+        if (fabs(distance) < 0.01)
         {
             actionServer.setSucceeded();
             break;

@@ -1,0 +1,156 @@
+#!/usr/bin/env python
+
+import roslib
+import rospy
+import smach
+import smach_ros
+from base_controller.msg import GotoPointAction, GotoPointActionGoal, ResetOdomAction
+from lifter_controller.msg import CloseGripperAction, CloseGripperActionGoal, LiftAction, LiftActionGoal
+from geometry_msgs.msg import Point
+
+
+def main():
+    rospy.init_node('master_state_machine')
+
+    sm = smach.StateMachine(outcomes=['done'])
+
+    with sm:
+        smach.StateMachine.add("RESET_ODOM", smach_ros.SimpleActionState('reset_odom', ResetOdomAction),
+                                {"succeeded", "LOAD_INITIAL_BALL"})
+        smach.StateMachine.add("LOAD_INITIAL_BALL", build_load_initial_ball_state(),
+                                {"succeeded", "INITIAL_BUMPER_WAIT"})
+        smach.StateMachine.add("INITIAL_BUMPER_WAIT", build_initial_bumper_wait_state(),
+                                {"succeeded", "INITIAL_BUMPER_WAIT"})
+        smach.StateMachine.add("PICKUP_RIGHT_BALL", build_pickup_right_ball_state(),
+                                {"succeeded", "PICKUP_MIDDLE_LEFT_BALLS"})
+        smach.StateMachine.add("PICKUP_MIDDLE_LEFT_BALLS", build_pickup_middle_left_balls_state(),
+                                {"succeeded", "PICKUP_AREA_BALLS"})
+        smach.StateMachine.add("PICKUP_AREA_BALLS", build_pickup_area_balls_state(),
+                                {"succeeded", "PICKUP_AREA_BALLS"})
+
+    rospy.spin()
+
+
+def build_load_initial_ball_state():
+    sm = smach.StateMachine(outcomes=["succeeded"])
+
+    with sm:
+        smach.StateMachine.add("WAIT_BALL", WaitBallState('right_gripper'))
+        smach.StateMachine.add("CLOSE_GRIPPER", smach_ros.SimpleActionState('close_gripper', GloseGripperAction), {"succeeded", "LOAD_INITIAL_BALL"}))
+    return sm
+
+def build_initial_bumper_wait_state():
+    sm=smach.StateMachine(outcomes = ["succeeded"])
+
+    with sm:
+        smach.StateMachine.add("WAIT_BUMPER", )
+    return sm
+
+def build_pickup_right_ball_state():
+    sm=smach.StateMachine(outcomes = ["succeeded"])
+
+    with sm:
+        smach.StateMachine.add("DRIVE_RIGHT_FIELD", )
+        smach.StateMachine.add("DRIVE_RIGHT_BALL", "gripper_left")
+        smach.StateMachine.add("CLOSE_GRIPPER", "gripper_left")
+        smach.StateMachine.add("DRIVE_RIGHT_BUCKET_FIELD", )
+        smach.StateMachine.add("LIFT_LIFTER", )
+        smach.StateMachine.add("DRIVE_WALL", )
+        smach.StateMachine.add("DRIVE_BUCKET")
+        smach.StateMachine.add("RELEASE_BALLS",)
+    return sm
+
+def build_pickup_middle_left_balls_state():
+    sm=smach.StateMachine(outcomes = ["succeeded"])
+
+    with sm:
+        smach.StateMachine.add("DRIVE_MIDDLE_FIELD", )
+        smach.StateMachine.add("LOWER_LIFTER", )
+        smach.StateMachine.add("DRIVE_MIDDLE_BALL", "gripper_right")
+        smach.StateMachine.add("CLOSE_GRIPPER", "gripper_right")
+        smach.StateMachine.add("DRIVE_LEFT_FIELD", )
+        smach.StateMachine.add("DRIVE_LEFT_BALL", "gripper_left")
+        smach.StateMachine.add("CLOSE_GRIPPER", "gripper_left")
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", )
+        smach.StateMachine.add("LIFT_LIFTER", )
+        smach.StateMachine.add("DRIVE_WALL", )
+        smach.StateMachine.add("DRIVE_BUCKET")
+        smach.StateMachine.add("RELEASE_BALLS",)
+    return sm
+
+def build_pickup_area_balls_state():
+    sm=smach.StateMachine(outcomes = ["succeeded"])
+
+    with sm:
+        smach.StateMachine.add("DRIVE_LEFT_FIELD")
+        smach.StateMachine.add("LOWER_LIFTER", )
+        smach.StateMachine.add("DRIVE_BALL_PIT_FIELD")
+        smach.StateMachine.add("DRIVE_CLOSEST_BALL", "gripper_right")
+        smach.StateMachine.add("CLOSE_GRIPPER", "gripper_right")
+        smach.StateMachine.add("DRIVE_CLOSEST_BALL", "gripper_left")
+        smach.StateMachine.add("CLOSE_GRIPPER", "gripper_left")
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", )
+        smach.StateMachine.add("LIFT_LIFTER", )
+        smach.StateMachine.add("DRIVE_WALL", )
+        smach.StateMachine.add("DRIVE_BUCKET")
+        smach.StateMachine.add("RELEASE_BALLS",)
+
+
+
+
+
+        # goto_ball_goal = GotoPointActionGoal()
+        # goto_ball_goal.goal.point = ball_position
+        # goto_ball_goal.goal.reference_frame = gripper_frame
+        # goto_ball_goal.goal.target_frame = "odom"
+        # smach.StateMachine.add('GOTO_BALL',
+        #                        smach_ros.SimpleActionState('goto_point_action',
+        #                                                    GotoPointAction,
+        #                                                    goal=goto_ball_goal),
+        #                        {'succeeded': "CLOSE_GRIPPER"})
+
+
+
+
+
+
+
+
+        # lift_goal = LiftActionGoal()
+        # lift_goal.goal.position = 99999
+        # smach.StateMachine.add('LIFT_LIFTER',
+        #                        smach_ros.SimpleActionState('lift_action',
+        #                        LiftAction,
+        #                        goal=lift_goal),
+        #                        {'succeeded': ""})
+
+# def build_grab_state():
+#     sm = smach.StateMachine(outcomes=['done'])
+#     with sm:
+#         # ball position xy
+#         # which gripper to load in to
+#         ball_position = Point(x=0, y=0, z=0)
+#         gripper_frame = "right_gripper"
+
+#         goto_ball_goal = GotoPointActionGoal()
+#         goto_ball_goal.goal.point = ball_position
+#         goto_ball_goal.goal.reference_frame = gripper_frame
+#         goto_ball_goal.goal.target_frame = "odom"
+#         smach.StateMachine.add('GOTO_BALL',
+#                                smach_ros.SimpleActionState('goto_point_action',
+#                                                            GotoPointAction,
+#                                                            goal=goto_ball_goal),
+#                                {'succeeded': "CLOSE_GRIPPER"})
+
+#         close_gripper_goal = CloseGripperActionGoal()
+#         close_gripper_goal.goal.gripper_frame = gripper_frame
+#         smach.StateMachine.add('CLOSE_GRIPPER',
+#                                smach_ros.SimpleActionState('close_gripper_action',
+#                                CloseGripperAction,
+#                                goal=close_gripper_goal),
+#                                {'succeeded': "LIFT_LIFTER"})
+#     return sm
+
+
+if __name__ == "__main__":
+    main()

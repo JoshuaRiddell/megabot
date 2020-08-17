@@ -24,6 +24,8 @@
             <param name="camera_name" value="camera"/>
             <param name="io_method" value="mmap"/>
             <param name="framerate" value="10"/>
+            <param name="autoexposure" value="false"/>
+            <param name="exposure" value="60"/>
         </node>
         <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
 
@@ -40,7 +42,7 @@
 
         <!-- <node name="line_locator" pkg="line_locator" type="line_locator_node" machine="pi"/> -->
         <node pkg="localisation" type="localisation_node" name="localisation" machine="pi"/>
-        <node pkg="odometry" type="odometry_node" name="odometry" machine="pi"/>
+        <!-- <node pkg="odometry" type="odometry_node" name="odometry" machine="pi"/> -->
         <node pkg="base_controller" type="base_controller_node" name="base_controller" machine="pi"/>
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >

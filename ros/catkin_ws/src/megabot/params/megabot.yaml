@@ -15,20 +15,22 @@ ball:
       target_bitrate: 800000
 ball_locator:
   area_high: 36000.0
-  area_low: 100.0
+  area_low: 700.0
   circularity_high: 1.0
-  circularity_low: 0.47
-  h_high: 49
-  h_low: 19
+  circularity_low: 0.53
+  h_high: 36
+  h_low: 15
   s_high: 255
-  s_low: 95
+  s_low: 71
   v_high: 255
-  v_low: 0
+  v_low: 71
 camera:
+  autoexposure: false
   camera_frame_id: camera_link
   camera_name: camera
   debayer:
     debayer: 0
+  exposure: 60
   framerate: 10
   image_color:
     compressed:
@@ -122,20 +124,27 @@ description: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- =================
   \        <box size=\"0.3 0.25 0.02\"/>\n      </geometry>\n    </collision>\n  </link>\n\
   \  <joint name=\"base_plate_joint\" type=\"fixed\">\n    <origin rpy=\"0 0 0\" xyz=\"\
   0 0 0.04\"/>\n    <parent link=\"base_link\"/>\n    <child link=\"base_plate\"/>\n\
-  \  </joint>\n  <link name=\"front_left_wheel_link\">\n    <inertial>\n      <mass\
-  \ value=\"2.637\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"0.02467\"\
-  \ ixy=\"0\" ixz=\"0\" iyy=\"0.04411\" iyz=\"0\" izz=\"0.02467\"/>\n    </inertial>\n\
-  \    <visual>\n      <origin rpy=\"1.570795 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
-  \        <cylinder length=\"0.032\" radius=\"0.03\"/>\n      </geometry>\n    </visual>\n\
-  \    <collision>\n      <origin rpy=\"1.570795 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
-  \        <cylinder length=\"0.032\" radius=\"0.03\"/>\n      </geometry>\n    </collision>\n\
-  \  </link>\n  <gazebo reference=\"front_left_wheel_link\">\n    <mu1 value=\"1.0\"\
-  />\n    <mu2 value=\"1.0\"/>\n    <kp value=\"10000000.0\"/>\n    <kd value=\"1.0\"\
-  />\n    <fdir1 value=\"1 0 0\"/>\n  </gazebo>\n  <joint name=\"front_left_wheel\"\
-  \ type=\"fixed\">\n    <parent link=\"base_link\"/>\n    <child link=\"front_left_wheel_link\"\
-  />\n    <origin rpy=\"0 0 0\" xyz=\"0.125 0.15 0.03\"/>\n    <axis rpy=\"0 0 0\"\
-  \ xyz=\"0 1 0\"/>\n  </joint>\n  <link name=\"front_right_wheel_link\">\n    <inertial>\n\
-  \      <mass value=\"2.637\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+  \  </joint>\n  <!-- Robot base plate -->\n  <link name=\"right_grabber\">\n    <inertial>\n\
+  \      <mass value=\"50\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
+  50.0\" ixy=\"0.0\" ixz=\"0.0\" iyy=\"50.0\" iyz=\"0.0\" izz=\"50.0\"/>\n    </inertial>\n\
+  \    <visual>\n      <geometry>\n        <sphere size=\"0.3\"/>\n      </geometry>\n\
+  \    </visual>\n  </link>\n  <joint name=\"right_grabber_joint\" type=\"fixed\"\
+  >\n    <origin rpy=\"0 0 0\" xyz=\"0.239 -0.067 0.03\"/>\n    <parent link=\"base_footprint\"\
+  />\n    <child link=\"right_grabber\"/>\n  </joint>\n  <link name=\"front_left_wheel_link\"\
+  >\n    <inertial>\n      <mass value=\"2.637\"/>\n      <origin xyz=\"0 0 0\"/>\n\
+  \      <inertia ixx=\"0.02467\" ixy=\"0\" ixz=\"0\" iyy=\"0.04411\" iyz=\"0\" izz=\"\
+  0.02467\"/>\n    </inertial>\n    <visual>\n      <origin rpy=\"1.570795 0 0\" xyz=\"\
+  0 0 0\"/>\n      <geometry>\n        <cylinder length=\"0.032\" radius=\"0.03\"\
+  />\n      </geometry>\n    </visual>\n    <collision>\n      <origin rpy=\"1.570795\
+  \ 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n        <cylinder length=\"0.032\" radius=\"\
+  0.03\"/>\n      </geometry>\n    </collision>\n  </link>\n  <gazebo reference=\"\
+  front_left_wheel_link\">\n    <mu1 value=\"1.0\"/>\n    <mu2 value=\"1.0\"/>\n \
+  \   <kp value=\"10000000.0\"/>\n    <kd value=\"1.0\"/>\n    <fdir1 value=\"1 0\
+  \ 0\"/>\n  </gazebo>\n  <joint name=\"front_left_wheel\" type=\"fixed\">\n    <parent\
+  \ link=\"base_link\"/>\n    <child link=\"front_left_wheel_link\"/>\n    <origin\
+  \ rpy=\"0 0 0\" xyz=\"0.125 0.15 0.03\"/>\n    <axis rpy=\"0 0 0\" xyz=\"0 1 0\"\
+  />\n  </joint>\n  <link name=\"front_right_wheel_link\">\n    <inertial>\n     \
+  \ <mass value=\"2.637\"/>\n      <origin xyz=\"0 0 0\"/>\n      <inertia ixx=\"\
   0.02467\" ixy=\"0\" ixz=\"0\" iyy=\"0.04411\" iyz=\"0\" izz=\"0.02467\"/>\n    </inertial>\n\
   \    <visual>\n      <origin rpy=\"1.570795 0 0\" xyz=\"0 0 0\"/>\n      <geometry>\n\
   \        <cylinder length=\"0.032\" radius=\"0.03\"/>\n      </geometry>\n    </visual>\n\
@@ -302,9 +311,9 @@ description: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- =================
   \ -->\n      <!-- <offset>0 0 0</offset> -->\n    </plugin>\n  </gazebo>\n</robot>\n\
   \n"
 lifter_controller:
-  servo_left_closed: 90
+  servo_left_closed: 168
   servo_left_open: 90
-  servo_right_closed: 90
+  servo_right_closed: 18
   servo_right_open: 90
   speed: 100
 line:

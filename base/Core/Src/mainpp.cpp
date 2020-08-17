@@ -3,12 +3,20 @@
 #include <stm32f4xx_hal_conf.h>
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
+#include <std_msgs/Float64.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf/tf.h>
+#include <tf/transform_broadcaster.h>
 
 extern "C" {
 #include "omni_bot/omni_bot.h"
 }
 
 ros::NodeHandle nh;
+std_msgs::Float64 motorMsg;
+geometry_msgs::Twist commandEchoMsg;
+geometry_msgs::TransformStamped odomTransform;
+tf::TransformBroadcaster broadcaster;
 
 void cmdVelCallback(const geometry_msgs::Twist& msg);
 ros::Subscriber<geometry_msgs::Twist> cmdVelSub("cmd_vel", &cmdVelCallback);
@@ -22,20 +30,44 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 }
 
 void setup() {
-	stepper_setup();
+	pin_setup();
+	timer_setup();
 	motion_setup();
+	kinematics_setup();
+
 	enable_steppers();
 
 	nh.initNode();
 	nh.subscribe(cmdVelSub);
+	broadcaster.init(nh);
 }
 
+#define LOOP_DIVISOR 10
+
 void loop() {
-	nh.spinOnce();
-	HAL_Delay(50);
+	uint32_t loopCount = 0;
+
+	while (true) {
+		nh.spinOnce();
+		HAL_Delay(10);
+
+		++loopCount;
+
+		if (loopCount % LOOP_DIVISOR == 0) {
+			position_t position = get_position();
+
+			odomTransform.header.frame_id = "odom";
+			odomTransform.child_frame_id = "base_footprint";
+			odomTransform.transform.translation.x = position.x/1000 + 1.2;
+			odomTransform.transform.translation.y = position.y/1000 + 0.265;
+			odomTransform.transform.translation.z = 0.;
+			odomTransform.transform.rotation = tf::createQuaternionFromYaw(-position.theta + M_PI/2);
+			odomTransform.header.stamp = nh.now();
+			broadcaster.sendTransform(odomTransform);
+		}
+	}
 }
 
 void cmdVelCallback(const geometry_msgs::Twist& msg) {
-	HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_1);
 	move_robot(-msg.linear.y*314, msg.linear.x*314, msg.angular.z*72);
 }

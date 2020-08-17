@@ -5,25 +5,21 @@
 SpeedCurve::SpeedCurve()
     : acceleration(0.1), minSpeed(0.05), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
 {
-    calculateSpeedDistanceGradient();
 }
 
 void SpeedCurve::setAcceleration(double acceleration)
 {
     this->acceleration = acceleration;
-    calculateSpeedDistanceGradient();
 }
 
 void SpeedCurve::setMinSpeed(double minSpeed)
 {
     this->minSpeed = minSpeed;
-    calculateSpeedDistanceGradient();
 }
 
 void SpeedCurve::setMaxSpeed(double maxSpeed)
 {
     this->maxSpeed = maxSpeed;
-    calculateSpeedDistanceGradient();
 }
 
 void SpeedCurve::setLoopPeriod(double loopPeriod)

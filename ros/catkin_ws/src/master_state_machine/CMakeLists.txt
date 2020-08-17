@@ -8,7 +8,8 @@ project(master_state_machine)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+  rospy
+  base_controller
 )
 
 ## System dependencies are found with CMake's conventions

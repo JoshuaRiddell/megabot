@@ -11,8 +11,6 @@ public:
     double getNextSpeed();
 
 private:
-    void calculateSpeedDistanceGradient();
-
     double currentSpeed;
     double targetSpeed;
     double loopPeriod;

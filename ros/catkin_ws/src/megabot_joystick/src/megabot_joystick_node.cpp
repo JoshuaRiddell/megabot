@@ -49,7 +49,7 @@ void publishCmdVel(const sensor_msgs::Joy& msg) {
 
     cmdVel.linear.x = msg.axes[AXIS_LEFT_VERTICAL] * 0.25;
     cmdVel.linear.y = msg.axes[AXIS_LEFT_HORIZONTAL] * 0.25;
-    cmdVel.angular.z = msg.axes[AXIS_RIGHT_HORIZONTAL] * 0.3;
+    cmdVel.angular.z = msg.axes[AXIS_RIGHT_HORIZONTAL] * 0.6;
 
     cmdVelPub.publish(cmdVel);
 }
