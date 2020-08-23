@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 #include <base_controller/GotoPointAction.h>
+#include <base_controller/ResetOdomAction.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2/LinearMath/Transform.h>
 #include <base_controller/speed_curve.h>
@@ -37,4 +38,15 @@ private:
 
     SpeedCurve translationSpeedCurve;
     AccelerationLimiter accelerationLimiter;
+};
+
+class ResetOdomAction {
+public:
+    ResetOdomAction(std::string actionName);
+
+private:
+    void executeCallback(const base_controller::ResetOdomGoalConstPtr &goal);
+
+    actionlib::SimpleActionServer<base_controller::ResetOdomAction> actionServer;
+    ros::NodeHandle nh;
 };

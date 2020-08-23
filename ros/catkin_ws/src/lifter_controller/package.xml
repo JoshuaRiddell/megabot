@@ -11,6 +11,9 @@
   <depend>roscpp</depend>
   <depend>std_msgs</depend>
   <depend>dynamic_reconfigure</depend>
+  <depend>actionlib</depend>
+  <depend>actionlib_msgs</depend>
+  <depend>message_generation</depend>
 
   <export>
   </export>

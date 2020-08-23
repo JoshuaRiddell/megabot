@@ -26,6 +26,8 @@ CoordinateTransformer coordinateTransformer;
 ros::Time currentTimestamp;
 std::string currentFrame;
 
+std::string referenceFrame = "odom";
+
 void setupProjectionPlane();
 void dynamicReconfigureCallback(ball_locator::ImageAnalysisConfig &config, uint32_t level);
 void cameraInfoCallback(const sensor_msgs::CameraInfo& msg);
@@ -137,7 +139,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
     coordinateTransformer.setCameraTransform(cameraTransform);
 
     ball_msgs::BallView ballCentresMessage;
-    ballCentresMessage.header.frame_id = "map";
+    ballCentresMessage.header.frame_id = referenceFrame;
     ballCentresMessage.header.stamp = currentTimestamp;
 
     for (int i = 0; i < centres.size(); ++i) {
@@ -159,7 +161,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
     if (cameraViewPolyPub.getNumSubscribers() > 0) {
         geometry_msgs::PolygonStamped viewMsg;
         viewMsg.header.stamp = currentTimestamp;
-        viewMsg.header.frame_id = "map";
+        viewMsg.header.frame_id = referenceFrame;
         
         for (int i = 0; i < viewBounds.size(); ++i) {
             geometry_msgs::Point point;
@@ -177,7 +179,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
     if (ballCentresVisPub.getNumSubscribers() > 0) {
         geometry_msgs::PointStamped point;
         point.header.stamp = currentTimestamp;
-        point.header.frame_id = "map";
+        point.header.frame_id = referenceFrame;
 
         for (int i = 0; i < ballCentresMessage.locations.size(); ++i) {
             point.point = ballCentresMessage.locations.at(i);
@@ -188,7 +190,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
 
 tf2::Transform getCameraTransform() {
     geometry_msgs::TransformStamped cameraTransformStamped;
-    cameraTransformStamped = tfBuffer.lookupTransform("map", currentFrame, currentTimestamp, ros::Duration(1.0));
+    cameraTransformStamped = tfBuffer.lookupTransform(referenceFrame, currentFrame, currentTimestamp, ros::Duration(1.0));
 
     tf2::Transform cameraTransform;
     tf2::fromMsg(cameraTransformStamped.transform, cameraTransform);

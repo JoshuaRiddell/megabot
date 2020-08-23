@@ -3,55 +3,180 @@
 #include <std_msgs/Int16.h>
 #include <dynamic_reconfigure/server.h>
 #include <lifter_controller/LifterConfig.h>
+#include <lifter_controller.h>
 
 ros::Publisher stepperPub, servoLeftPub, servoRightPub;
+int liftState, grabberLeftState, grabberRightState;
 lifter_controller::LifterConfig lifterConfig;
 
-void reconfigureCallback(lifter_controller::LifterConfig &config, uint32_t level) {
-    ROS_INFO("Reconfigure Request: %d %d, %d %d, %d", 
-              config.servo_left_open, config.servo_left_closed,
-              config.servo_right_open, config.servo_right_closed,
-              config.speed);
+void openServoLeft();
+void openServoRight();
+void closeServoLeft();
+void closeServoRight();
+void lifterUp();
+void lifterDown();
+
+void reconfigureCallback(lifter_controller::LifterConfig &config, uint32_t level)
+{
     lifterConfig = config;
 }
 
-void lifterLiftCallback(const std_msgs::Int8 &msg) {
-    if (msg.data == 1) {
-        std_msgs::Int16 stepper;
-        stepper.data = 1;
-        stepperPub.publish(stepper);
-    } else if (msg.data == -1) {
-        std_msgs::Int16 stepper;
-        stepper.data = -1;
-        stepperPub.publish(stepper);
+void openServoLeft()
+{
+    std_msgs::Int16 servo;
+    servo.data = lifterConfig.servo_left_open;
+    servoLeftPub.publish(servo);
+}
+
+void openServoRight()
+{
+    std_msgs::Int16 servo;
+    servo.data = lifterConfig.servo_right_open;
+    servoRightPub.publish(servo);
+}
+
+void closeServoLeft()
+{
+    std_msgs::Int16 servo;
+    servo.data = lifterConfig.servo_left_closed;
+    servoLeftPub.publish(servo);
+}
+
+void closeServoRight()
+{
+    std_msgs::Int16 servo;
+    servo.data = lifterConfig.servo_right_closed;
+    servoRightPub.publish(servo);
+}
+
+void lifterUp()
+{
+    std_msgs::Int16 stepper;
+    stepper.data = 1;
+    stepperPub.publish(stepper);
+}
+
+void lifterDown()
+{
+    std_msgs::Int16 stepper;
+    stepper.data = -1;
+    stepperPub.publish(stepper);
+}
+
+void lifterLiftCallback(const std_msgs::Int8 &msg)
+{
+    if (msg.data == 1)
+    {
+        lifterUp();
+    }
+    else if (msg.data == -1)
+    {
+        lifterDown();
     }
 }
 
-void lifterGrabberLeftCallback(const std_msgs::Int8 &msg) {
-    if (msg.data == 1) {
-        std_msgs::Int16 servo;
-        servo.data = lifterConfig.servo_left_open;
-        servoLeftPub.publish(servo);
-    } else if (msg.data == -1) {
-        std_msgs::Int16 servo;
-        servo.data = lifterConfig.servo_left_closed;
-        servoLeftPub.publish(servo);
+void lifterGrabberLeftCallback(const std_msgs::Int8 &msg)
+{
+    if (msg.data == 1)
+    {
+        openServoLeft();
+    }
+    else if (msg.data == -1)
+    {
+        closeServoLeft();
     }
 }
 
-void lifterGrabberRightCallback(const std_msgs::Int8 &msg) {
-    if (msg.data == 1) {
-        std_msgs::Int16 servo;
-        servo.data = lifterConfig.servo_right_open;
-        servoRightPub.publish(servo);
-    } else if (msg.data == -1) {
-        std_msgs::Int16 servo;
-        servo.data = lifterConfig.servo_right_closed;
-        servoRightPub.publish(servo);
+void lifterGrabberRightCallback(const std_msgs::Int8 &msg)
+{
+    if (msg.data == 1)
+    {
+        openServoRight();
+    }
+    else if (msg.data == -1)
+    {
+        closeServoRight();
     }
 }
 
-int main(int argc, char **argv) {
+void liftStatusCallback(const std_msgs::Int8 &msg)
+{
+    liftState = msg.data;
+}
+
+void grabberLeftStatusCallback(const std_msgs::Int8 &msg)
+{
+    grabberLeftState = msg.data;
+}
+
+void grabberRightStatusCallback(const std_msgs::Int8 &msg)
+{
+    grabberRightState = msg.data;
+}
+
+LiftAction::LiftAction(std::string actionName)
+    : actionName(actionName),
+     actionServer(nh, actionName, boost::bind(&LiftAction::executeCallback, this, _1), false)
+{
+    actionServer.start();
+}
+
+void LiftAction::executeCallback(const lifter_controller::LiftGoalConstPtr &goal)
+{
+    int updateFrequency = 10;
+    int timeoutTime = 5;
+    int timeoutN = timeoutTime * updateFrequency;
+    ros::Rate rate(updateFrequency);
+    int requiredState = liftState;
+
+    if (goal->position == goal->UP)
+    {
+        lifterUp();
+        requiredState = 1;
+    }
+    else if (goal->position == goal->DOWN)
+    {
+        lifterDown();
+        requiredState = -1;
+    }
+
+    ros::Duration().sleep();
+    actionServer.setSucceeded();
+}
+
+GrabAction::GrabAction(std::string actionName)
+    : actionName(actionName),
+    actionServer(nh, actionName, boost::bind(&GrabAction::executeCallback, this, _1), false)
+{
+    actionServer.start();
+}
+
+GrabAction::~GrabAction() {
+
+}
+
+void GrabAction::executeCallback(const lifter_controller::GrabGoalConstPtr &goal)
+{
+    if (goal->grabber_frame == "left_grabber") {
+        if (goal->position == goal->OPEN) {
+            openServoLeft();
+        } else if (goal->position == goal->CLOSE) {
+            closeServoLeft();
+        }
+    } else if (goal->grabber_frame == "right_grabber") {
+        if (goal->position == goal->OPEN) {
+            openServoRight();
+        } else if (goal->position == goal->CLOSE) {
+            closeServoRight();
+        }
+    }
+
+    ros::Duration(0.5).sleep();
+    actionServer.setSucceeded();
+}
+
+int main(int argc, char **argv)
+{
     ros::init(argc, argv, "lifter_controller");
     ros::NodeHandle nh;
 
@@ -60,9 +185,14 @@ int main(int argc, char **argv) {
     serverCallback = boost::bind(&reconfigureCallback, _1, _2);
     server.setCallback(serverCallback);
 
+    // LiftAction("lift");
+    GrabAction grabAction("grab");
+
     ros::Subscriber joySub = nh.subscribe("lifter/lift", 1, &lifterLiftCallback);
     ros::Subscriber grabberLeftSub = nh.subscribe("lifter/grabber_left", 1, &lifterGrabberLeftCallback);
     ros::Subscriber grabberRightSub = nh.subscribe("lifter/grabber_right", 1, &lifterGrabberRightCallback);
+
+    ros::Subscriber liftStatusSub = nh.subscribe("lifter/lift/status", 1, &liftStatusCallback);
 
     stepperPub = nh.advertise<std_msgs::Int16>("lifter/stepper", 1, true);
     servoLeftPub = nh.advertise<std_msgs::Int16>("lifter/servo_left", 1, true);
@@ -72,4 +202,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-

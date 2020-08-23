@@ -1,0 +1,7 @@
+string grabber_frame
+int8 position
+int8 OPEN = 1
+int8 CLOSE = 0
+---
+
+---

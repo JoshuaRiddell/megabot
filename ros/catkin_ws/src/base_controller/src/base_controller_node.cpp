@@ -3,15 +3,15 @@
 #include <ros/ros.h>
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int8.h>
+#include <std_msgs/Empty.h>
 #include <geometry_msgs/Twist.h>
 #include <math.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <actionlib/server/simple_action_server.h>
-#include <base_controller/GotoPointAction.h>
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-ros::Publisher cmdVelPub;
+ros::Publisher cmdVelPub, resetOdomPub;
 
 GotoAction::GotoAction(std::string actionName)
     : tfListener(tfBuffer),
@@ -104,14 +104,28 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
     publishVelocity(tf2::Vector3(0,0,0), 0);
 }
 
+ResetOdomAction::ResetOdomAction(std::string actionName)
+: actionServer(nh, actionName, boost::bind(&ResetOdomAction::executeCallback, this, _1), false) {
+    actionServer.start();
+}
+
+void ResetOdomAction::executeCallback(const base_controller::ResetOdomGoalConstPtr &goal) {
+    std_msgs::Empty msg;
+    resetOdomPub.publish(msg);
+    ros::Duration(0.5).sleep();
+    actionServer.setSucceeded();
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_controller");
     ros::NodeHandle nh;
 
     cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
+    resetOdomPub = nh.advertise<std_msgs::Empty>("reset_odom", 1, false);
 
     GotoPointAction gotoPointAction("goto_point");
+    // ResetOdomAction resetOdom("reset_odom");
 
     ros::spin();
 

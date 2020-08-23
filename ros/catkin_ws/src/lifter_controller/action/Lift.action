@@ -1,0 +1,6 @@
+int8 position
+int8 UP = 1
+int8 DOWN = -1
+---
+
+---

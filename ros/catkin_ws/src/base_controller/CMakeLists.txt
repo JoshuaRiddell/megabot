@@ -15,7 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 add_action_files(
   DIRECTORY action
-  FILES GotoPoint.action
+  FILES GotoPoint.action ResetOdom.action
 )
 
 generate_messages(
