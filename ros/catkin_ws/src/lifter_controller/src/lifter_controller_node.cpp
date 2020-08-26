@@ -124,7 +124,7 @@ LiftAction::LiftAction(std::string actionName)
 void LiftAction::executeCallback(const lifter_controller::LiftGoalConstPtr &goal)
 {
     int updateFrequency = 10;
-    int timeoutTime = 5;
+    int timeoutTime = 10;
     int timeoutN = timeoutTime * updateFrequency;
     ros::Rate rate(updateFrequency);
     int requiredState = liftState;
@@ -140,7 +140,28 @@ void LiftAction::executeCallback(const lifter_controller::LiftGoalConstPtr &goal
         requiredState = -1;
     }
 
-    ros::Duration().sleep();
+    int i = 0;
+    while (true) {
+        if (actionServer.isPreemptRequested() || !ros::ok())
+        {
+            actionServer.setPreempted();
+            return;
+        }
+
+        if (i == timeoutN) {
+            actionServer.setPreempted();
+            return;
+        }
+
+        if (liftState == goal->position) {
+            break;
+        }
+
+        rate.sleep();
+
+        ++i;
+    }
+
     actionServer.setSucceeded();
 }
 
@@ -185,7 +206,7 @@ int main(int argc, char **argv)
     serverCallback = boost::bind(&reconfigureCallback, _1, _2);
     server.setCallback(serverCallback);
 
-    // LiftAction("lift");
+    LiftAction liftAction("lift");
     GrabAction grabAction("grab");
 
     ros::Subscriber joySub = nh.subscribe("lifter/lift", 1, &lifterLiftCallback);
