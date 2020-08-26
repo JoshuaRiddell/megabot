@@ -10,7 +10,7 @@
 
 enum {
   STEPPER_DOWN = -1,
-  STEPPER_STOP = 0,
+  STEPPER_MOVING = 0,
   STEPPER_UP = 1,
 };
 
@@ -27,7 +27,8 @@ const int stepperStepPin = A2;
 const int stepperUpEndPin = 11;
 const int stepperDownEndPin = 12;
 const int stepperEnablePin = A3;
-int currentEndPin = stepperDownEndPin;
+int currentStepperEndPin = stepperDownEndPin;
+int currentStepperDirection = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
@@ -46,6 +47,9 @@ ros::Subscriber<std_msgs::Int16> rightGripperSub("lifter/servo_right", rightGrip
 ros::Subscriber<std_msgs::Int16> stepperSub("lifter/stepper", stepperCb);
 ros::Subscriber<std_msgs::String> displaySub("display", displayCb);
 
+std_msgs::Int16 stepperStatusMsg;
+ros::Publisher stepperStatusPub("lifter/stepper/status", &stepperStatusMsg);
+
 void leftGripperCb(const std_msgs::Int16& msg) {
   leftGripper.write(msg.data);
 }
@@ -55,16 +59,20 @@ void rightGripperCb(const std_msgs::Int16& msg) {
 }
 
 void stepperCb(const std_msgs::Int16& msg) {
-  switch (msg.data) {
+  setStepperDirection(msg.data);
+}
+
+void setStepperDirection(int direction) {
+  switch (direction) {
     case STEPPER_DOWN:
       digitalWrite(stepperDirPin, HIGH);
-      currentEndPin = stepperDownEndPin;
-      break;
-    case STEPPER_STOP:
+      currentStepperEndPin = stepperDownEndPin;
+      currentStepperDirection = STEPPER_DOWN;
       break;
     case STEPPER_UP:
       digitalWrite(stepperDirPin, LOW);
-      currentEndPin = stepperUpEndPin;
+      currentStepperEndPin = stepperUpEndPin;
+      currentStepperDirection = STEPPER_UP;
       break;
   }
 }
@@ -75,14 +83,24 @@ void displayCb(const std_msgs::String& msg) {
 }
 
 void toggleStep() {
-  if (!digitalRead(currentEndPin)) {
+  if (!digitalRead(currentStepperEndPin)) {
     for (int i = 0; i < 2; ++i) {
       digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
       delayMicroseconds(100);
       digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
       delayMicroseconds(100);
     }
+
+    if (stepperStatusMsg.data != STEPPER_MOVING) {
+      stepperStatusMsg.data = STEPPER_MOVING;
+      stepperStatusPub.publish(&stepperStatusMsg);
+    }
   } else {
+    if (stepperStatusMsg.data != currentStepperDirection) {
+      stepperStatusMsg.data = currentStepperDirection;
+      stepperStatusPub.publish(&stepperStatusMsg);
+    }
+
     delay(10);
   }
 }
@@ -112,12 +130,12 @@ void setupStepper() {
   pinMode(stepperUpEndPin, INPUT);
   pinMode(stepperDownEndPin, INPUT);
 
-  digitalWrite(stepperDirPin, LOW);
-  digitalWrite(stepperStepPin, LOW);
   digitalWrite(stepperEnablePin, LOW);
-  currentEndPin = stepperUpEndPin;
+  setStepperDirection(STEPPER_UP);
 
   nh.subscribe(stepperSub);
+  nh.advertise(stepperStatusPub);
+  stepperStatusMsg.data = STEPPER_MOVING;
 }
 
 void setupLcd() {
