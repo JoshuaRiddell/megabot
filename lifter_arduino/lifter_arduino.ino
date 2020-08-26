@@ -17,6 +17,8 @@ enum {
 Servo leftGripper;
 Servo rightGripper;
 
+const int loopDelayTime = 10;
+
 const int leftGripperPin = 9;
 const int leftGripperStart = 90;
 const int rightGripperPin = 10;
@@ -83,12 +85,14 @@ void displayCb(const std_msgs::String& msg) {
 }
 
 void toggleStep() {
+  static const int stepDelay = 40;
+  
   if (!digitalRead(currentStepperEndPin)) {
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < loopDelayTime * 1000 / stepDelay / 2; ++i) {
       digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
-      delayMicroseconds(100);
+      delayMicroseconds(stepDelay);
       digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
-      delayMicroseconds(100);
+      delayMicroseconds(stepDelay);
     }
 
     if (stepperStatusMsg.data != STEPPER_MOVING) {
@@ -101,7 +105,7 @@ void toggleStep() {
       stepperStatusPub.publish(&stepperStatusMsg);
     }
 
-    delay(10);
+    delay(loopDelayTime);
   }
 }
 
