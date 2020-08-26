@@ -83,9 +83,29 @@
     </visual>
   </link>
   <joint name="right_grabber_joint" type="fixed">
-    <origin xyz="0.239 -0.067 0.03" rpy="0 0 0" />
+    <origin xyz="0.231 -0.039 0.03" rpy="0 0 0" />
     <parent link="base_footprint"/>
     <child link="right_grabber" />
+  </joint>
+
+  <link name="right_grabber_stage">
+    <inertial>
+      <mass value="50" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="50.0" ixy="0.0" ixz="0.0"
+        iyy="50.0" iyz="0.0"
+        izz="50.0" />
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.01" />
+      </geometry>
+    </visual>
+  </link>
+  <joint name="right_grabber_stage_joint" type="fixed">
+    <origin xyz="0.1 0.0 0.03" rpy="0 0 0" />
+    <parent link="right_grabber"/>
+    <child link="right_grabber_stage" />
   </joint>
 
   <link name="left_grabber">
@@ -106,6 +126,26 @@
     <origin xyz="0.231 0.039 0.03" rpy="0 0 0" />
     <parent link="base_footprint"/>
     <child link="left_grabber" />
+  </joint>
+
+  <link name="left_grabber_stage">
+    <inertial>
+      <mass value="50" />
+      <origin xyz="0 0 0" />
+      <inertia ixx="50.0" ixy="0.0" ixz="0.0"
+        iyy="50.0" iyz="0.0"
+        izz="50.0" />
+    </inertial>
+    <visual>
+      <geometry>
+        <sphere radius="0.01" />
+      </geometry>
+    </visual>
+  </link>
+  <joint name="left_grabber_stage_joint" type="fixed">
+    <origin xyz="0.1 0.0 0.03" rpy="0 0 0" />
+    <parent link="left_grabber"/>
+    <child link="left_grabber_stage" />
   </joint>
 
   <!-- Wheel parameters -->
