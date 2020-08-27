@@ -10,7 +10,7 @@
 
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
-ros::Publisher cmdVelPub, resetOdomPub;
+#include <base_controller/reset_odom_action.h>
 
 GotoPointAction::GotoPointAction(std::string actionName)
     : GotoAction(actionName),
@@ -76,24 +76,10 @@ void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr
     }
 }
 
-ResetOdomAction::ResetOdomAction(std::string actionName)
-: actionServer(nh, actionName, boost::bind(&ResetOdomAction::executeCallback, this, _1), false) {
-    actionServer.start();
-}
-
-void ResetOdomAction::executeCallback(const base_controller::ResetOdomGoalConstPtr &goal) {
-    std_msgs::Empty msg;
-    resetOdomPub.publish(msg);
-    ros::Duration(0.5).sleep();
-    actionServer.setSucceeded();
-}
-
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_controller");
     ros::NodeHandle nh;
-
-    resetOdomPub = nh.advertise<std_msgs::Empty>("reset_odom", 1, false);
 
     GotoPointAction gotoPointAction("goto_point");
     GotoPoseAction gotoPoseAction("goto_pose");

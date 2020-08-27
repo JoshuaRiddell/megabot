@@ -34,6 +34,7 @@ include_directories(
 add_library(speed_curve src/base_controller/speed_curve.cpp)
 add_library(acceleration_limiter src/base_controller/acceleration_limiter.cpp)
 add_library(goto_action src/base_controller/goto_action.cpp)
+add_library(reset_odom_action src/base_controller/reset_odom_action.cpp)
 add_executable(${PROJECT_NAME}_node src/base_controller_node.cpp)
 add_dependencies(${PROJECT_NAME}_node ${PROJECT_NAME}_generate_messages_cpp)
 
@@ -42,9 +43,11 @@ target_link_libraries(${PROJECT_NAME}_node
   speed_curve
   acceleration_limiter
   goto_action
+  reset_odom_action
 )
 target_link_libraries(speed_curve ${catkin_LIBRARIES})
 target_link_libraries(acceleration_limiter ${catkin_LIBRARIES})
 target_link_libraries(goto_action ${catkin_LIBRARIES})
+target_link_libraries(reset_odom_action ${catkin_LIBRARIES})
 
 
