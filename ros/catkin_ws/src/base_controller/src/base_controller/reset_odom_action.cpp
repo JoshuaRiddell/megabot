@@ -1,4 +1,5 @@
 #include <base_controller/reset_odom_action.h>
+#include <std_msgs/Empty.h>
 
 ResetOdomAction::ResetOdomAction(std::string actionName)
 : actionServer(nh, actionName, boost::bind(&ResetOdomAction::executeCallback, this, _1), false) {

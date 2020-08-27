@@ -27,9 +27,13 @@ protected:
     bool isRosPreempted();
     bool isReachedGoal();
 
+    ros::NodeHandle nh;
+
 private:
     tf2::Transform getTransform(std::string startFrame, std::string endFrame);
     void updateCmdVel();
+    void updateTranslationVelocity(tf2::Transform robotTransform);
+    void updateRotationVelocity(tf2::Transform robotTransform);
     void publishCmdVel();
     void resetCmdVel();
 
@@ -41,7 +45,6 @@ private:
 
     // void publishVelocity(tf2::Vector3 translation, double rotation);
 
-    ros::NodeHandle nh;
     std::string actionName;
 
     tf2_ros::Buffer tfBuffer;

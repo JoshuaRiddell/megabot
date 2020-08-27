@@ -3,7 +3,6 @@
 
 #include <base_controller/GotoPointAction.h>
 #include <base_controller/GotoPoseAction.h>
-#include <base_controller/ResetOdomAction.h>
 #include <base_controller/goto_action.h>
 
 #include <tf2/LinearMath/Transform.h>

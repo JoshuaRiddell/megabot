@@ -8,8 +8,6 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <actionlib/server/simple_action_server.h>
 
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-
 #include <base_controller/reset_odom_action.h>
 
 GotoPointAction::GotoPointAction(std::string actionName)

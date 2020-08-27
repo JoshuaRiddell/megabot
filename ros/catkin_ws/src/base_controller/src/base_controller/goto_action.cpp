@@ -1,4 +1,5 @@
 #include <base_controller/goto_action.h>
+#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 
 #define LOOP_RATE 20
 
@@ -22,7 +23,7 @@ GotoAction::GotoAction(std::string actionName)
     rotationSpeedCurve.setMaxSpeed(0.03);
     rotationSpeedCurve.setLoopPeriod(loopPeriod);
 
-    cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
+    cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmdVel", 1, true);
 }
 
 void GotoAction::resetControllers()
@@ -73,9 +74,9 @@ void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
 
     if (fabs(distance) < distanceThreshold) {
         hasReachedTranslationGoal = true;
-        cmd_vel.linear.x = 0;
-        cmd_vel.linear.y = 0;
-        cmd_vel.linear.z = 0;
+        cmdVel.linear.x = 0;
+        cmdVel.linear.y = 0;
+        cmdVel.linear.z = 0;
         return;
     } else {
         hasReachedTranslationGoal = false;
@@ -92,9 +93,9 @@ void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
     robotRotation.setRotation(robotTransform.getRotation().inverse());
     velocity = robotTransform * velocity;
 
-    cmd_vel.linear.x = velocity.getX();
-    cmd_vel.linear.y = velocity.getY();
-    cmd_vel.linear.z = velocity.getZ();
+    cmdVel.linear.x = velocity.getX();
+    cmdVel.linear.y = velocity.getY();
+    cmdVel.linear.z = velocity.getZ();
 }
 
 void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
@@ -103,13 +104,13 @@ void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
 
     if (fabs(angularDistance) < rotationThreshold) {
         hasReachedRotationGoal = true;
-        cmd_vel.angular.z = 0;
+        cmdVel.angular.z = 0;
         return;
     } else {
         hasReachedRotationGoal = false;
         rotationSpeedCurve.setTargetDistance(angularDistance);
         double angularSpeed = rotationSpeedCurve.getNextSpeed();
-        cmd_vel.angular.z = angularSpeed;
+        cmdVel.angular.z = angularSpeed;
     }
 }
 
@@ -147,7 +148,7 @@ bool GotoAction::isReachedGoal()
     return hasReachedTranslationGoal && hasReachedRotationGoal;
 }
 
-tf2::Transform GotoAction::getRobotTransform(std::string targetFrame, std::string referenceFrame)
+tf2::Transform GotoAction::getTransform(std::string targetFrame, std::string referenceFrame)
 {
     geometry_msgs::TransformStamped robotTransformMsg;
     robotTransformMsg = tfBuffer.lookupTransform(targetFrame, referenceFrame, ros::Time::now(), ros::Duration(1.0));

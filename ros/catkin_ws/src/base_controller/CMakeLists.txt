@@ -47,7 +47,7 @@ target_link_libraries(${PROJECT_NAME}_node
 )
 target_link_libraries(speed_curve ${catkin_LIBRARIES})
 target_link_libraries(acceleration_limiter ${catkin_LIBRARIES})
-target_link_libraries(goto_action ${catkin_LIBRARIES})
+target_link_libraries(goto_action ${catkin_LIBRARIES} speed_curve acceleration_limiter)
 target_link_libraries(reset_odom_action ${catkin_LIBRARIES})
 
 
