@@ -4,7 +4,6 @@
 #include <sensor_msgs/Joy.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Empty.h>
-#include <geometry_msgs/Twist.h>
 #include <math.h>
 #include <tf2/LinearMath/Vector3.h>
 #include <actionlib/server/simple_action_server.h>
@@ -13,33 +12,6 @@
 
 ros::Publisher cmdVelPub, resetOdomPub;
 
-GotoAction::GotoAction(std::string actionName)
-    : tfListener(tfBuffer),
-      actionName(actionName)
-{
-}
-
-tf2::Transform GotoAction::getRobotTransform(std::string targetFrame, std::string referenceFrame)
-{
-    geometry_msgs::TransformStamped robotTransformMsg;
-    robotTransformMsg = tfBuffer.lookupTransform(targetFrame, referenceFrame, ros::Time::now(), ros::Duration(1.0));
-    tf2::Transform robotTransform;
-    tf2::fromMsg(robotTransformMsg.transform, robotTransform);
-    return robotTransform;
-}
-
-void GotoAction::publishVelocity(tf2::Vector3 translation, double rotation)
-{
-    geometry_msgs::Twist cmdVel;
-    cmdVel.linear.x = translation.getX();
-    cmdVel.linear.y = translation.getY();
-    cmdVel.linear.z = 0;
-    cmdVel.angular.x = 0;
-    cmdVel.angular.y = 0;
-    cmdVel.angular.z = rotation;
-    cmdVelPub.publish(cmdVel);
-}
-
 GotoPointAction::GotoPointAction(std::string actionName)
     : GotoAction(actionName),
       actionServer(nh, actionName, boost::bind(&GotoPointAction::executeCallback, this, _1), false)
@@ -47,21 +19,102 @@ GotoPointAction::GotoPointAction(std::string actionName)
     actionServer.start();
 }
 
-GotoPointAction::~GotoPointAction()
+void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstPtr &goal) {
+    resetControllers();
+    setRobotFrame(goal->reference_frame);
+    setTargetFrame(goal->target_frame);
+    setGoalPoint(goal->point);
+
+    while (true) {
+        publishNextCmdVel();
+
+        if (isRosPreempted() || actionServer.isPreemptRequested()) {
+            actionServer.setPreempted();
+            break;
+        }
+
+        if (isReachedGoal()) {
+            actionServer.setSucceeded();
+            break;
+        }
+
+        loopDelay();
+    }
+
+    stopRobot();
+}
+
+
+
+
+
+
+
+
+
+    tf2::Transform robotTransform = getRobotTransform(goal->target_frame.data,
+                                                        goal->reference_frame.data);
+
+    tf2::Vector3 goalPoint;
+    tf2::fromMsg(goal->point, goalPoint);
+
+    tf2::Vector3 displacement = goalPoint - robotTransform.getOrigin();
+    displacement.setZ(0);
+
+    double distance = displacement.length();
+    translationSpeedCurve.setTargetDistance(distance);
+    double speed = translationSpeedCurve.getNextSpeed();
+
+    accelerationLimiter.setTargetSpeedDirection(speed, displacement);
+
+    tf2::Vector3 velocity = accelerationLimiter.getNextVelocity();
+
+    tf2::Transform robotRotation;
+    robotRotation.setOrigin(tf2::Vector3(0, 0, 0));
+    robotRotation.setRotation(robotTransform.getRotation().inverse());
+    velocity = robotRotation * velocity;
+
+    if (fabs(distance) < 0.02)
+    {
+        actionServer.setSucceeded();
+        break;
+    }
+
+    publishVelocity(velocity, 0);
+}
+
+publishVelocity(tf2::Vector3(0,0,0), 0);
+
+GotoPoseAction::GotoPoseAction(std::string actionName)
+    : GotoAction(actionName),
+      actionServer(nh, actionName, boost::bind(&GotoPoseAction::executeCallback, this, _1), false)
+{
+    actionServer.start();
+}
+
+GotoPoseAction::~GotoPoseAction()
 {
 }
 
-void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstPtr &goal)
+void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr &goal)
 {
-    ros::Rate rate(10);
+    ros::Rate rate(20);
 
     translationSpeedCurve.setAcceleration(0.1);
-    translationSpeedCurve.setMinSpeed(0.05);
+    translationSpeedCurve.setMinSpeed(0.03);
     translationSpeedCurve.setMaxSpeed(0.5);
-    translationSpeedCurve.setLoopPeriod(0.1);
+    translationSpeedCurve.setLoopPeriod(0.05);
 
-    accelerationLimiter.setMaxAcceleration(0.1);
-    accelerationLimiter.setLoopPeriod(0.1);
+    accelerationLimiter.setMaxAcceleration(0.5);
+    accelerationLimiter.setLoopPeriod(0.05);
+
+    rotationSpeedCurve.setAcceleration(0.1);
+    rotationSpeedCurve.setMinSpeed(0.05);
+    rotationSpeedCurve.setMaxSpeed(0.03);
+    rotationSpeedCurve.setLoopPeriod(0.05);
+
+    accelerationLimiter.reset();
+    translationSpeedCurve.reset();
 
     while (true)
     {
@@ -77,6 +130,8 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
         tf2::Vector3 goalPoint;
         tf2::fromMsg(goal->point, goalPoint);
 
+        double goalRotation = goal->rotation;
+
         tf2::Vector3 displacement = goalPoint - robotTransform.getOrigin();
         displacement.setZ(0);
 
@@ -87,12 +142,16 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
         accelerationLimiter.setTargetSpeedDirection(speed, displacement);
 
         tf2::Vector3 velocity = accelerationLimiter.getNextVelocity();
+
         tf2::Transform robotRotation;
         robotRotation.setOrigin(tf2::Vector3(0, 0, 0));
         robotRotation.setRotation(robotTransform.getRotation().inverse());
+
+        double rotationDifference = robotTransform.getRotation().getAngle();
+
         velocity = robotRotation * velocity;
 
-        if (fabs(distance) < 0.01)
+        if (fabs(distance) < 0.02)
         {
             actionServer.setSucceeded();
             break;
@@ -116,16 +175,46 @@ void ResetOdomAction::executeCallback(const base_controller::ResetOdomGoalConstP
     actionServer.setSucceeded();
 }
 
+
+
+
+
+
+
+// void callback(goal) {
+//     resetControllers();
+
+//     while (true) {
+//         updateTranslationGoal(goal->point);
+//         updateRotationGoal(goal->rotation);
+//         publishCmdVel();
+//         loopDelay();
+
+//         if (shouldExit()) {
+//             break;
+//         }
+//     }
+
+//     stopRobot();
+// }
+
+
+
+
+
+
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_controller");
     ros::NodeHandle nh;
 
-    cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
+    // cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
     resetOdomPub = nh.advertise<std_msgs::Empty>("reset_odom", 1, false);
 
     GotoPointAction gotoPointAction("goto_point");
-    // ResetOdomAction resetOdom("reset_odom");
+    GotoPoseAction gotoPoseAction("goto_pose");
+    ResetOdomAction resetOdom("reset_odom");
 
     ros::spin();
 

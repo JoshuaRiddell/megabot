@@ -9,6 +9,7 @@ public:
 
     void setTargetDistance(double distance);
     double getNextSpeed();
+    void reset();
 
 private:
     double currentSpeed;

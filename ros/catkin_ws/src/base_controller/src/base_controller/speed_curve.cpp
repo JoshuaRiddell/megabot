@@ -5,6 +5,11 @@
 SpeedCurve::SpeedCurve()
     : acceleration(0.1), minSpeed(0.05), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
 {
+    reset();
+}
+
+void SpeedCurve::reset() {
+    currentSpeed = 0;
 }
 
 void SpeedCurve::setAcceleration(double acceleration)
@@ -42,6 +47,9 @@ double SpeedCurve::getNextSpeed()
     {
         currentSpeed = std::max(targetSpeed, currentSpeed - acceleration * loopPeriod);
     }
+
+    currentSpeed = std::max(minSpeed, currentSpeed);
+    currentSpeed = std::min(maxSpeed, currentSpeed);
 
     return currentSpeed;
 }
