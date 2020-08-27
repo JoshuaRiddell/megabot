@@ -8,11 +8,6 @@
 
 #include <tf2/LinearMath/Transform.h>
 
-
-
-
-
-
 class GotoPointAction : public GotoAction {
 public:
     GotoPointAction(std::string actionName);

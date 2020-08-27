@@ -60,7 +60,57 @@ void GotoAction::publishNextCmdVel()
 }
 
 void GotoAction::updateCmdVel() {
+    tf2::Transform robotTransform = getTransform(targetFrame, robotFrame);
+    updateTranslationVelocity(robotTransform);
+    updateRotationVelocity(robotTransform);
+}
 
+void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
+    tf2::Vector3 displacement = goalPoint - robotTransform.getOrigin();
+    displacement.setZ(0);
+
+    double distance = displacement.length();
+
+    if (fabs(distance) < distanceThreshold) {
+        hasReachedTranslationGoal = true;
+        cmd_vel.linear.x = 0;
+        cmd_vel.linear.y = 0;
+        cmd_vel.linear.z = 0;
+        return;
+    } else {
+        hasReachedTranslationGoal = false;
+    }
+
+    translationSpeedCurve.setTargetDistance(distance);
+    double speed = translationSpeedCurve.getNextSpeed();
+
+    accelerationLimiter.setTargetSpeedDirection(speed, displacement);
+    tf2::Vector3 velocity = accelerationLimiter.getNextVelocity();
+
+    tf2::Transform robotRotation;
+    robotRotation.setOrigin(tf2::Vector3(0,0,0));
+    robotRotation.setRotation(robotTransform.getRotation().inverse());
+    velocity = robotTransform * velocity;
+
+    cmd_vel.linear.x = velocity.getX();
+    cmd_vel.linear.y = velocity.getY();
+    cmd_vel.linear.z = velocity.getZ();
+}
+
+void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
+    tf2::Quaternion angularDisplacement = goalRotation - robotTransform.getRotation();
+    double angularDistance = angularDisplacement.getAngle() - M_PI;
+
+    if (fabs(angularDistance) < rotationThreshold) {
+        hasReachedRotationGoal = true;
+        cmd_vel.angular.z = 0;
+        return;
+    } else {
+        hasReachedRotationGoal = false;
+        rotationSpeedCurve.setTargetDistance(angularDistance);
+        double angularSpeed = rotationSpeedCurve.getNextSpeed();
+        cmd_vel.angular.z = angularSpeed;
+    }
 }
 
 void GotoAction::publishCmdVel() {
@@ -94,6 +144,7 @@ bool GotoAction::isRosPreempted()
 
 bool GotoAction::isReachedGoal()
 {
+    return hasReachedTranslationGoal && hasReachedRotationGoal;
 }
 
 tf2::Transform GotoAction::getRobotTransform(std::string targetFrame, std::string referenceFrame)
@@ -103,8 +154,4 @@ tf2::Transform GotoAction::getRobotTransform(std::string targetFrame, std::strin
     tf2::Transform robotTransform;
     tf2::fromMsg(robotTransformMsg.transform, robotTransform);
     return robotTransform;
-}
-
-void GotoAction::publishVelocity(tf2::Vector3 translation, double rotation)
-{
 }

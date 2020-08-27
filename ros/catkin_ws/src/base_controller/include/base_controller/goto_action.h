@@ -56,6 +56,12 @@ private:
     tf2::Vector3 goalPoint;
     tf2::Quaternion goalRotation;
 
+    bool hasReachedTranslationGoal;
+    bool hasReachedRotationGoal;
+
+    const double distanceThreshold = 0.01;
+    const double rotationThreshold = 0.02;
+
     ros::Rate loopRate;
 };
 
