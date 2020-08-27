@@ -13,6 +13,9 @@ public:
     void setHsvHighThreshold(uint8_t h, uint8_t s, uint8_t v);
     void setAreaBounds(float low, float high);
     void setCircularityBounds(float low, float high);
+    void setMorphSize(int size);
+    void setErodeCount(int count);
+    void setDilateCount(int count);
 
     std::vector<cv::Point> getBallImageCentres(const cv::Mat &img);
 
@@ -33,5 +36,7 @@ private:
     float areaHighThreshold = 1000000;
     float circularityLowThreshold = 0;
     float circularityHighThreshold = 1.;
+    int erodeCount = 2;
+    int dilateCount = 2;
+    int morphSize = 2;
 };
-

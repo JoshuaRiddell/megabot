@@ -78,6 +78,9 @@ void dynamicReconfigureCallback(ball_locator::ImageAnalysisConfig &config, uint3
     ballLocator.setHsvHighThreshold(config.h_high, config.s_high, config.v_high);
     ballLocator.setAreaBounds(config.area_low, config.area_high);
     ballLocator.setCircularityBounds(config.circularity_low, config.circularity_high);
+    ballLocator.setMorphSize(config.morph_size);
+    ballLocator.setErodeCount(config.erode_count);
+    ballLocator.setDilateCount(config.dilate_count);
 }
 
 void cameraInfoCallback(const sensor_msgs::CameraInfo& msg) {

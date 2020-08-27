@@ -23,10 +23,9 @@ contours_t BallLocator::getContours(const cv::Mat &img) {
     cv::cvtColor(img, hsv, cv::COLOR_BGR2HSV);
     cv::inRange(hsv, hsvLowThreshold, hsvHighThreshold, thresholdedImage);
 
-
-    cv::Mat element = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(2,2));
-    cv::erode(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), 3);
-    cv::dilate(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), 3);
+    cv::Mat element = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(morphSize, morphSize));
+    cv::erode(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), erodeCount);
+    cv::dilate(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), dilateCount);
 
     contours_t contours;
     cv::findContours(thresholdedImage, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
@@ -107,4 +106,16 @@ void BallLocator::setAreaBounds(float low, float high) {
 void BallLocator::setCircularityBounds(float low, float high) {
     circularityLowThreshold = low;
     circularityHighThreshold = high;
+}
+
+void BallLocator::setMorphSize(int size) {
+    morphSize = size;
+}
+
+void BallLocator::setErodeCount(int count) {
+    erodeCount = count;
+}
+
+void BallLocator::setDilateCount(int count) {
+    dilateCount = count;
 }
