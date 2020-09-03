@@ -99,7 +99,7 @@ void lifterGrabberRightCallback(const std_msgs::Int8 &msg)
     }
 }
 
-void liftStatusCallback(const std_msgs::Int8 &msg)
+void liftStatusCallback(const std_msgs::Int16 &msg)
 {
     liftState = msg.data;
 }
@@ -213,7 +213,7 @@ int main(int argc, char **argv)
     ros::Subscriber grabberLeftSub = nh.subscribe("lifter/grabber_left", 1, &lifterGrabberLeftCallback);
     ros::Subscriber grabberRightSub = nh.subscribe("lifter/grabber_right", 1, &lifterGrabberRightCallback);
 
-    ros::Subscriber liftStatusSub = nh.subscribe("lifter/lift/status", 1, &liftStatusCallback);
+    ros::Subscriber liftStatusSub = nh.subscribe("lifter/stepper/status", 1, &liftStatusCallback);
 
     stepperPub = nh.advertise<std_msgs::Int16>("lifter/stepper", 1, true);
     servoLeftPub = nh.advertise<std_msgs::Int16>("lifter/servo_left", 1, true);

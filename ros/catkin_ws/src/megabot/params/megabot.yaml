@@ -20,6 +20,9 @@ ball_locator:
   circularity_low: 0.53
   h_high: 36
   h_low: 15
+  morph_dilate_count: 2
+  morph_erode_count: 2
+  morph_size: 2
   s_high: 255
   s_low: 51
   v_high: 255
