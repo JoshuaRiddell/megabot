@@ -62,13 +62,12 @@ void loop() {
 
 		if (loopCount % LOOP_DIVISOR == 0) {
 			position_t position = get_position();
-
 			odomTransform.header.frame_id = "odom";
 			odomTransform.child_frame_id = "base_footprint";
-			odomTransform.transform.translation.x = position.x/1000;
-			odomTransform.transform.translation.y = position.y/1000;
+			odomTransform.transform.translation.x = position.x;
+			odomTransform.transform.translation.y = position.y;
 			odomTransform.transform.translation.z = 0.;
-			odomTransform.transform.rotation = tf::createQuaternionFromYaw(-position.theta);
+			odomTransform.transform.rotation = tf::createQuaternionFromYaw(-position.theta + M_PI/2);
 			odomTransform.header.stamp = nh.now();
 			broadcaster.sendTransform(odomTransform);
 		}
@@ -84,7 +83,7 @@ void resetOdomCallback(const std_msgs::Empty& msg) {
 
 	initialPosition.x = 1.2;
 	initialPosition.y = 0.265;
-	initialPosition.theta = -M_PI/2;
+	initialPosition.theta = 0;
 
 	set_position(initialPosition);
 }
