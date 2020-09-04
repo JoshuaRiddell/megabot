@@ -43,8 +43,6 @@ private:
     std::string robotFrame;
     std::string targetFrame;
 
-    // void publishVelocity(tf2::Vector3 translation, double rotation);
-
     std::string actionName;
 
     tf2_ros::Buffer tfBuffer;
@@ -63,7 +61,7 @@ private:
     bool hasReachedRotationGoal;
 
     const double distanceThreshold = 0.01;
-    const double rotationThreshold = 0.02;
+    const double rotationThreshold = 0.005;
 
     ros::Rate loopRate;
 };

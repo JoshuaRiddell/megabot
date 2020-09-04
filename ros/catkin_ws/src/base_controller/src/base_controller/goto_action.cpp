@@ -19,11 +19,13 @@ GotoAction::GotoAction(std::string actionName)
     accelerationLimiter.setLoopPeriod(loopPeriod);
 
     rotationSpeedCurve.setAcceleration(0.1);
-    rotationSpeedCurve.setMinSpeed(0.05);
-    rotationSpeedCurve.setMaxSpeed(0.03);
+    rotationSpeedCurve.setMinSpeed(0.03);
+    rotationSpeedCurve.setMaxSpeed(0.5);
     rotationSpeedCurve.setLoopPeriod(loopPeriod);
 
-    cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmdVel", 1, true);
+    cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
+
+    goalRotation.setEuler(0, 0, M_PI_2);
 }
 
 void GotoAction::resetControllers()
@@ -91,7 +93,7 @@ void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
     tf2::Transform robotRotation;
     robotRotation.setOrigin(tf2::Vector3(0,0,0));
     robotRotation.setRotation(robotTransform.getRotation().inverse());
-    velocity = robotTransform * velocity;
+    velocity = robotRotation * velocity;
 
     cmdVel.linear.x = velocity.getX();
     cmdVel.linear.y = velocity.getY();
@@ -99,7 +101,7 @@ void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
 }
 
 void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
-    tf2::Quaternion angularDisplacement = goalRotation - robotTransform.getRotation();
+    tf2::Quaternion angularDisplacement = goalRotation * robotTransform.getRotation().inverse();
     double angularDistance = angularDisplacement.getAngle() - M_PI;
 
     if (fabs(angularDistance) < rotationThreshold) {
@@ -108,7 +110,7 @@ void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
         return;
     } else {
         hasReachedRotationGoal = false;
-        rotationSpeedCurve.setTargetDistance(angularDistance);
+        rotationSpeedCurve.setTargetDistance(-angularDistance);
         double angularSpeed = rotationSpeedCurve.getNextSpeed();
         cmdVel.angular.z = angularSpeed;
     }

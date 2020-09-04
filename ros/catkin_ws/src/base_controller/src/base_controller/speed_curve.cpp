@@ -33,23 +33,29 @@ void SpeedCurve::setLoopPeriod(double loopPeriod)
 }
 
 void SpeedCurve::setTargetDistance(double distance)
-{
-    targetSpeed = std::min(maxSpeed, sqrt(2 * acceleration * distance));
+{   
+    double speedMagnitude = sqrt(2 * acceleration * fabs(distance));
+    targetSpeed = std::copysign(speedMagnitude, distance);
 }
 
 double SpeedCurve::getNextSpeed()
 {
     if (targetSpeed > currentSpeed)
     {
-        currentSpeed = std::min(targetSpeed, currentSpeed + acceleration * loopPeriod);
+        currentSpeed = currentSpeed + acceleration * loopPeriod;
     }
     else
     {
-        currentSpeed = std::max(targetSpeed, currentSpeed - acceleration * loopPeriod);
+        currentSpeed = currentSpeed - acceleration * loopPeriod;
     }
 
-    currentSpeed = std::max(minSpeed, currentSpeed);
-    currentSpeed = std::min(maxSpeed, currentSpeed);
+    if (fabs(targetSpeed - currentSpeed) < acceleration * loopPeriod) {
+        currentSpeed = targetSpeed;
+    }
+
+    if (fabs(currentSpeed) > maxSpeed) {
+        currentSpeed = std::copysign(maxSpeed, currentSpeed);
+    }
 
     return currentSpeed;
 }
