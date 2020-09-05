@@ -132,12 +132,12 @@ void LiftAction::executeCallback(const lifter_controller::LiftGoalConstPtr &goal
     if (goal->position == goal->UP)
     {
         lifterUp();
-        requiredState = 1;
+        requiredState = goal->UP;
     }
     else if (goal->position == goal->DOWN)
     {
         lifterDown();
-        requiredState = -1;
+        requiredState = goal->DOWN;
     }
 
     int i = 0;

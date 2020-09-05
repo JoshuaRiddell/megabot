@@ -18,13 +18,13 @@ ball_locator:
   area_low: 700.0
   circularity_high: 1.0
   circularity_low: 0.53
-  h_high: 36
+  h_high: 38
   h_low: 15
   morph_dilate_count: 2
   morph_erode_count: 2
   morph_size: 2
   s_high: 255
-  s_low: 51
+  s_low: 46
   v_high: 255
   v_low: 85
 base_controller:
@@ -41,7 +41,7 @@ camera:
   camera_name: camera
   debayer:
     debayer: 0
-  exposure: 1500
+  exposure: 150
   framerate: 10
   gain: 0
   image_color:
