@@ -27,6 +27,14 @@ ball_locator:
   s_low: 51
   v_high: 255
   v_low: 85
+base_controller:
+  angle_speed_curve_acceleration: 2.0
+  angle_speed_curve_distance_coefficient: 0.6
+  angle_speed_curve_max_speed: 2.0
+  translation_acceleration_limiter_max_acceleration: 4.0
+  translation_speed_curve_acceleration: 1.5
+  translation_speed_curve_distance_coefficient: 0.5
+  translation_speed_curve_max_speed: 4.0
 camera:
   autoexposure: false
   camera_frame_id: camera_link

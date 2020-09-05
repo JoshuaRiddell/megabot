@@ -11,6 +11,11 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   actionlib
   tf2_ros
+  dynamic_reconfigure
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/BaseController.cfg
 )
 
 add_action_files(
@@ -37,6 +42,7 @@ add_library(goto_action src/base_controller/goto_action.cpp)
 add_library(reset_odom_action src/base_controller/reset_odom_action.cpp)
 add_library(stepper_power_action src/base_controller/stepper_power_action.cpp)
 add_executable(${PROJECT_NAME}_node src/base_controller_node.cpp)
+add_dependencies(goto_action ${PROJECT_NAME}_gencfg)
 add_dependencies(reset_odom_action ${PROJECT_NAME}_generate_messages_cpp)
 add_dependencies(stepper_power_action ${PROJECT_NAME}_generate_messages_cpp)
 

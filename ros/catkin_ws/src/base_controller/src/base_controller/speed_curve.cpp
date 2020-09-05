@@ -2,14 +2,16 @@
 #include <algorithm>
 #include <math.h>
 
+#include <ros/ros.h>
+
 SpeedCurve::SpeedCurve()
-    : acceleration(0.1), minSpeed(0.05), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
+    : acceleration(0.1), distanceCoefficient(0.1), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
 {
     reset();
 }
 
 void SpeedCurve::reset() {
-    currentSpeed = 0;
+    setCurrentSpeed(0);
 }
 
 void SpeedCurve::setAcceleration(double acceleration)
@@ -17,9 +19,8 @@ void SpeedCurve::setAcceleration(double acceleration)
     this->acceleration = acceleration;
 }
 
-void SpeedCurve::setMinSpeed(double minSpeed)
-{
-    this->minSpeed = minSpeed;
+void SpeedCurve::setDistanceCoefficient(double coefficient) {
+    this->distanceCoefficient = coefficient;
 }
 
 void SpeedCurve::setMaxSpeed(double maxSpeed)
@@ -34,8 +35,12 @@ void SpeedCurve::setLoopPeriod(double loopPeriod)
 
 void SpeedCurve::setTargetDistance(double distance)
 {   
-    double speedMagnitude = sqrt(2 * acceleration * fabs(distance));
+    double speedMagnitude = 2 * distanceCoefficient * fabs(distance);
     targetSpeed = std::copysign(speedMagnitude, distance);
+}
+
+void SpeedCurve::setCurrentSpeed(double speed) {
+    this->currentSpeed = speed;
 }
 
 double SpeedCurve::getNextSpeed()
@@ -56,6 +61,9 @@ double SpeedCurve::getNextSpeed()
     if (fabs(currentSpeed) > maxSpeed) {
         currentSpeed = std::copysign(maxSpeed, currentSpeed);
     }
+
+    ROS_INFO("speed:%f", currentSpeed);
+    ROS_INFO("target:%f", targetSpeed);
 
     return currentSpeed;
 }

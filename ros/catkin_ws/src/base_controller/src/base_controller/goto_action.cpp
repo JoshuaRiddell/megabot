@@ -12,7 +12,6 @@ GotoAction::GotoAction(std::string actionName)
     double loopPeriod = 1. / LOOP_RATE;
 
     translationSpeedCurve.setAcceleration(0.1);
-    translationSpeedCurve.setMinSpeed(0.03);
     translationSpeedCurve.setMaxSpeed(0.5);
     translationSpeedCurve.setLoopPeriod(loopPeriod);
 
@@ -20,13 +19,24 @@ GotoAction::GotoAction(std::string actionName)
     accelerationLimiter.setLoopPeriod(loopPeriod);
 
     rotationSpeedCurve.setAcceleration(0.1);
-    rotationSpeedCurve.setMinSpeed(0.03);
     rotationSpeedCurve.setMaxSpeed(0.5);
     rotationSpeedCurve.setLoopPeriod(loopPeriod);
 
     cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
 
     goalRotation.setEuler(0, 0, M_PI_2);
+}
+
+void GotoAction::setConfig(base_controller::BaseControllerConfig &config) {
+    translationSpeedCurve.setAcceleration(config.translation_speed_curve_acceleration);
+    translationSpeedCurve.setMaxSpeed(config.translation_speed_curve_max_speed);
+    translationSpeedCurve.setDistanceCoefficient(config.translation_speed_curve_distance_coefficient);
+
+    accelerationLimiter.setMaxAcceleration(config.translation_acceleration_limiter_max_acceleration);
+
+    rotationSpeedCurve.setAcceleration(config.angle_speed_curve_acceleration);
+    rotationSpeedCurve.setMaxSpeed(config.angle_speed_curve_max_speed);
+    rotationSpeedCurve.setDistanceCoefficient(config.angle_speed_curve_distance_coefficient);
 }
 
 void GotoAction::resetControllers()
@@ -109,6 +119,7 @@ void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
     double angularDistance = yaw;
 
     if (fabs(angularDistance) < rotationThreshold) {
+        rotationSpeedCurve.setCurrentSpeed(0);
         hasReachedRotationGoal = true;
         cmdVel.angular.z = 0;
         return;

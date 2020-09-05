@@ -5,12 +5,17 @@
 #include <base_controller/speed_curve.h>
 #include <base_controller/acceleration_limiter.h>
 
+#include <base_controller/BaseControllerConfig.h>
+
 #include <std_msgs/String.h>
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 
 class GotoAction {
+public:
+    void setConfig(base_controller::BaseControllerConfig &config);
+
 protected:
     GotoAction(std::string name);
 
@@ -61,7 +66,7 @@ private:
     bool hasReachedRotationGoal;
 
     const double distanceThreshold = 0.01;
-    const double rotationThreshold = 0.005;
+    const double rotationThreshold = 0.05;
 
     ros::Rate loopRate;
 };

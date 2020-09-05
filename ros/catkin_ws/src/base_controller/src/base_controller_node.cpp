@@ -8,7 +8,12 @@
 #include <tf2/LinearMath/Vector3.h>
 #include <actionlib/server/simple_action_server.h>
 
+#include <dynamic_reconfigure/server.h>
+#include <base_controller/BaseControllerConfig.h>
 #include <base_controller/reset_odom_action.h>
+
+GotoPointAction *pointAction;
+GotoPoseAction *poseAction;
 
 GotoPointAction::GotoPointAction(std::string actionName)
     : GotoAction(actionName),
@@ -74,6 +79,12 @@ void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr
     }
 }
 
+void reconfigureCallback(base_controller::BaseControllerConfig &config, uint32_t level)
+{
+    pointAction->setConfig(config);
+    poseAction->setConfig(config);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_controller");
@@ -82,6 +93,14 @@ int main(int argc, char **argv)
     GotoPointAction gotoPointAction("goto_point");
     GotoPoseAction gotoPoseAction("goto_pose");
     ResetOdomAction resetOdom("reset_odom");
+
+    pointAction = &gotoPointAction;
+    poseAction = &gotoPoseAction;
+    
+    dynamic_reconfigure::Server<base_controller::BaseControllerConfig> server;
+    dynamic_reconfigure::Server<base_controller::BaseControllerConfig>::CallbackType serverCallback;
+    serverCallback = boost::bind(&reconfigureCallback, _1, _2);
+    server.setCallback(serverCallback);
 
     ros::spin();
 
