@@ -1,6 +1,6 @@
 #include <ros.h>
 #include <Servo.h>
-#include <LiquidCrystal_I2C.h>
+//#include <LiquidCrystal_I2C.h>
 
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int16.h>
@@ -32,7 +32,7 @@ const int stepperEnablePin = A3;
 int currentStepperEndPin = stepperDownEndPin;
 int currentStepperDirection = 0;
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+//LiquidCrystal_I2C lcd(0x27, 16, 2);
 
 void setupGrippers();
 void setupStepper();
@@ -80,8 +80,8 @@ void setStepperDirection(int direction) {
 }
 
 void displayCb(const std_msgs::String& msg) {
-  lcd.setCursor(0, 0);
-  lcd.print(msg.data);
+//  lcd.setCursor(0, 0);
+//  lcd.print(msg.data);
 }
 
 void toggleStep() {
@@ -143,8 +143,8 @@ void setupStepper() {
 }
 
 void setupLcd() {
-  lcd.init();
-  lcd.backlight();
+//  lcd.init();
+//  lcd.backlight();
   
   nh.subscribe(displaySub);
 }
