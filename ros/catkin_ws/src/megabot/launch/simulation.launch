@@ -10,6 +10,7 @@
     <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
     <param name="description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
 
+<<<<<<< HEAD
     <group ns="camera">
       <node pkg="nodelet" type="nodelet" name="image_proc_nodelet"  args="manager"/>
 
@@ -24,6 +25,9 @@
         <remap from="image_rect" to="image_rect_color" />
       </node>
     </group>
+=======
+    <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
+>>>>>>> 7fc3ec7262e8ef51cafbbcf22da657a0c3b47e0e
 
     <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
     <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>

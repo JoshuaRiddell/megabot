@@ -1,0 +1,6 @@
+string grabber_frame
+float64 distance_limit
+---
+string ball_frame
+geometry_msgs/Point position
+float64 distance

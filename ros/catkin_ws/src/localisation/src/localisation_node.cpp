@@ -3,13 +3,18 @@
 #include <tf2/LinearMath/Transform.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_broadcaster.h>
+#include <tf2_ros/transform_listener.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
+#include <localisation/SetPosition.h>
 
+tf2_ros::Buffer tfBuffer;
 std::vector<tf2::Quaternion> mapLineAngles;
 std::vector<tf2::Vector3> mapLineEnds;
 tf2::Transform mapToOdom;
 double movingAverageConstant = 0.2;
+
+tf2::Transform getTransform(std::string startFrame, std::string endFrame);
 
 void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     tf2::Quaternion measuredRotation;
@@ -97,6 +102,36 @@ void loadMapLines() {
     addLine(1.69, 1.2, 1.0472);
 }
 
+bool setLocationCallback(localisation::SetPosition::Request &request,
+                        localisation::SetPosition::Response &response) {
+    tf2::Vector3 requestedPosition;
+    tf2::Quaternion requestedRotation;
+
+    tf2::fromMsg(request.position, requestedPosition);
+    tf2::fromMsg(request.rotation, requestedRotation);
+
+    tf2::Transform requestedTransform;
+    requestedTransform.setOrigin(requestedPosition);
+    requestedTransform.setRotation(requestedRotation);
+
+    tf2::Transform currentTransform = getTransform("odom", "base_footprint");
+
+    mapToOdom = requestedTransform * currentTransform.inverse();
+
+    return true;
+}
+
+tf2::Transform getTransform(std::string startFrame, std::string endFrame)
+{
+    geometry_msgs::TransformStamped requestTransformStamped;
+    requestTransformStamped = tfBuffer.lookupTransform(startFrame, endFrame, ros::Time::now(), ros::Duration(1.0));
+
+    tf2::Transform requestTransform;
+    tf2::fromMsg(requestTransformStamped.transform, requestTransform);
+
+    return requestTransform;
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "localisation");
@@ -105,7 +140,9 @@ int main(int argc, char **argv)
     ros::Rate r(10);
 
     tf2_ros::TransformBroadcaster transformBroadcaster;
+    tf2_ros::TransformListener tfListener(tfBuffer);
 
+    ros::ServiceServer setPositionService = nh.advertiseService("set_location", setLocationCallback);
     ros::Subscriber line_sub = nh.subscribe("line_endpoint", 1, lineEndpointCallback);
 
     geometry_msgs::TransformStamped transformStamped;

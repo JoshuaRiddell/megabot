@@ -114,7 +114,7 @@ bool BallTracker::expired_by_timeout(ros::Time stamp) {
 bool BallTracker::expired_by_view(ros::Time stamp, bool currently_in_view, bool sample_found) {
     if (!currently_in_view) {
         _was_in_view = false;
-        return false;
+        return true;   // delete any ball that's not in view
     }
 
     if (!_was_in_view) {

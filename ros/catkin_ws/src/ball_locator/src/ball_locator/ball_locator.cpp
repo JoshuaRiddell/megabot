@@ -18,13 +18,17 @@ std::vector<cv::Point> BallLocator::getBallImageCentres(const cv::Mat &img) {
 }
 
 contours_t BallLocator::getContours(const cv::Mat &img) {
-    cv::Mat hsv, bin;
+    cv::Mat hsv;
 
     cv::cvtColor(img, hsv, cv::COLOR_BGR2HSV);
-    cv::inRange(hsv, hsvLowThreshold, hsvHighThreshold, bin);
+    cv::inRange(hsv, hsvLowThreshold, hsvHighThreshold, thresholdedImage);
+
+    cv::Mat element = getStructuringElement(cv::MORPH_ELLIPSE, cv::Size(morphSize, morphSize));
+    cv::erode(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), erodeCount);
+    cv::dilate(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), dilateCount);
 
     contours_t contours;
-    cv::findContours(bin, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
+    cv::findContours(thresholdedImage, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
     return contours;
 }
 
@@ -71,14 +75,18 @@ std::vector<cv::Point> BallLocator::getCircleCentres(const contours_t &contours)
 void BallLocator::updateDebugImage(const cv::Mat &img, const contours_t &contours, const centres_t centres) {
     img.copyTo(debugImage);
 
-    cv::Scalar drawColour = cv::Scalar(255, 255, 255);
+    cv::Mat colourThresholdedImage;
+    cv::cvtColor(thresholdedImage, colourThresholdedImage, cv::COLOR_GRAY2BGR);
+    cv::addWeighted(debugImage, 0.7, colourThresholdedImage, 0.3, 0, debugImage);
+
+    cv::Scalar drawColour = cv::Scalar(0, 0, 255);
 
     for (int i = 0; i < contours.size(); ++i) {
         cv::drawContours(debugImage, contours, i, drawColour, 2, 8);
     }
 
     for (int i = 0; i < centres.size(); ++i) {
-        cv::circle(debugImage, centres.at(i), 3, drawColour, 3);
+        cv::circle(debugImage, centres.at(i), 2, drawColour, 3);
     }
 }
 
@@ -98,4 +106,16 @@ void BallLocator::setAreaBounds(float low, float high) {
 void BallLocator::setCircularityBounds(float low, float high) {
     circularityLowThreshold = low;
     circularityHighThreshold = high;
+}
+
+void BallLocator::setMorphSize(int size) {
+    morphSize = size;
+}
+
+void BallLocator::setErodeCount(int count) {
+    erodeCount = count;
+}
+
+void BallLocator::setDilateCount(int count) {
+    dilateCount = count;
 }

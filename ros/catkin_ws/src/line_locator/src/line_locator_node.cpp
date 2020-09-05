@@ -194,6 +194,10 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
 
         // draw debug image if required
         if (!debug.empty()) {
+            cv::Mat colourThresholdedImage;
+            cv::cvtColor(bin, colourThresholdedImage, cv::COLOR_GRAY2BGR);
+            cv::addWeighted(debug, 0.7, colourThresholdedImage, 0.3, 0, debug);
+
             cv::Scalar white = cv::Scalar( 255, 255, 255 );
             cv::Scalar blue = cv::Scalar( 255, 0, 0 );
             cv::drawContours(debug, contours, i, white, 2, 8);

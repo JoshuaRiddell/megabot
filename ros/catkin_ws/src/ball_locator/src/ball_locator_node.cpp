@@ -26,6 +26,8 @@ CoordinateTransformer coordinateTransformer;
 ros::Time currentTimestamp;
 std::string currentFrame;
 
+std::string referenceFrame = "odom";
+
 void setupProjectionPlane();
 void dynamicReconfigureCallback(ball_locator::ImageAnalysisConfig &config, uint32_t level);
 void cameraInfoCallback(const sensor_msgs::CameraInfo& msg);
@@ -76,6 +78,9 @@ void dynamicReconfigureCallback(ball_locator::ImageAnalysisConfig &config, uint3
     ballLocator.setHsvHighThreshold(config.h_high, config.s_high, config.v_high);
     ballLocator.setAreaBounds(config.area_low, config.area_high);
     ballLocator.setCircularityBounds(config.circularity_low, config.circularity_high);
+    ballLocator.setMorphSize(config.morph_size);
+    ballLocator.setErodeCount(config.morph_erode_count);
+    ballLocator.setDilateCount(config.morph_dilate_count);
 }
 
 void cameraInfoCallback(const sensor_msgs::CameraInfo& msg) {
@@ -137,7 +142,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
     coordinateTransformer.setCameraTransform(cameraTransform);
 
     ball_msgs::BallView ballCentresMessage;
-    ballCentresMessage.header.frame_id = "map";
+    ballCentresMessage.header.frame_id = referenceFrame;
     ballCentresMessage.header.stamp = currentTimestamp;
 
     for (int i = 0; i < centres.size(); ++i) {
@@ -159,7 +164,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
     if (cameraViewPolyPub.getNumSubscribers() > 0) {
         geometry_msgs::PolygonStamped viewMsg;
         viewMsg.header.stamp = currentTimestamp;
-        viewMsg.header.frame_id = "map";
+        viewMsg.header.frame_id = referenceFrame;
         
         for (int i = 0; i < viewBounds.size(); ++i) {
             geometry_msgs::Point point;
@@ -177,7 +182,7 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
     if (ballCentresVisPub.getNumSubscribers() > 0) {
         geometry_msgs::PointStamped point;
         point.header.stamp = currentTimestamp;
-        point.header.frame_id = "map";
+        point.header.frame_id = referenceFrame;
 
         for (int i = 0; i < ballCentresMessage.locations.size(); ++i) {
             point.point = ballCentresMessage.locations.at(i);
@@ -188,46 +193,11 @@ void publishCentres(const cv::Mat &img, const centres_t &centres) {
 
 tf2::Transform getCameraTransform() {
     geometry_msgs::TransformStamped cameraTransformStamped;
-    cameraTransformStamped = tfBuffer.lookupTransform("map", currentFrame, currentTimestamp, ros::Duration(1.0));
+    cameraTransformStamped = tfBuffer.lookupTransform(referenceFrame, currentFrame, currentTimestamp, ros::Duration(1.0));
 
     tf2::Transform cameraTransform;
     tf2::fromMsg(cameraTransformStamped.transform, cameraTransform);
 
     return cameraTransform;
 }
-
-//     // project centres to ground plane
-//     // publish ball locations
-
-//     // get bounds of camera view projected onto the ground
-//     std::vector<cv::Point> image_bounds;
-//     image_bounds.push_back(cv::Point(0.1*img.cols, 0.1*img.rows));
-//     image_bounds.push_back(cv::Point(0.9*img.cols, 0.1*img.rows));
-//     image_bounds.push_back(cv::Point(0.9*img.cols, 0.9*img.rows));
-//     image_bounds.push_back(cv::Point(0.1*img.cols, 0.9*img.rows));
-//     for (int i = 0; i < image_bounds.size(); ++i) {
-//         geometry_msgs::Point p;
-//         geometry_msgs::Point32 p32;
-
-//         tf2::Vector3 coordinate = coordinateTransformer.projectImagePointToGroundPlane(centres[i]);
-//         tf2::toMsg(coordinate, p);
-
-//         ball_view_msg.locations.push_back(p);
-//         ball_view_msg.camera_view.push_back(p);
-
-//         p32.x = p.x;
-//         p32.y = p.y;
-//         p32.z = p.z;
-//         view_msg.polygon.points.push_back(p32);
-//     }
-//     cameraViewPolyPub.publish(view_msg);
-//     ballCentresPub.publish(ball_view_msg);
-
-//     // publish debug image if needed
-//     if (!debug.empty()) {
-//         publishDebugImage(debug);
-//     }
-// }
-
-
 
