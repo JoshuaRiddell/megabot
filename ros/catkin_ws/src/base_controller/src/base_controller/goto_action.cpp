@@ -1,5 +1,6 @@
 #include <base_controller/goto_action.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
+#include <tf2/LinearMath/Matrix3x3.h>
 
 #define LOOP_RATE 20
 
@@ -102,7 +103,10 @@ void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
 
 void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
     tf2::Quaternion angularDisplacement = goalRotation * robotTransform.getRotation().inverse();
-    double angularDistance = angularDisplacement.getAngle() - M_PI;
+
+    double roll, pitch, yaw;
+    tf2::Matrix3x3(angularDisplacement).getRPY(roll, pitch, yaw);
+    double angularDistance = yaw;
 
     if (fabs(angularDistance) < rotationThreshold) {
         hasReachedRotationGoal = true;
@@ -110,7 +114,7 @@ void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
         return;
     } else {
         hasReachedRotationGoal = false;
-        rotationSpeedCurve.setTargetDistance(-angularDistance);
+        rotationSpeedCurve.setTargetDistance(angularDistance);
         double angularSpeed = rotationSpeedCurve.getNextSpeed();
         cmdVel.angular.z = angularSpeed;
     }
