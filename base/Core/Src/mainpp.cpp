@@ -82,7 +82,7 @@ void resetOdomCallback(const std_msgs::Empty& msg) {
 	position_t initialPosition;
 
 	initialPosition.x = 1.2;
-	initialPosition.y = 0.265;
+	initialPosition.y = 0.170;
 	initialPosition.theta = 0;
 
 	set_position(initialPosition);

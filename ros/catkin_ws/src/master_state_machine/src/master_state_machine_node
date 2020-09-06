@@ -5,13 +5,15 @@ import roslib
 import rospy
 import smach
 import smach_ros
+import numpy as np
 from smach_ros import SimpleActionState, ServiceState, MonitorState
 from geometry_msgs.msg import Point
-from base_controller.msg import GotoPointAction, GotoPointGoal, ResetOdomAction
+from base_controller.msg import GotoPointAction, GotoPointGoal, GotoPoseAction, GotoPoseGoal, ResetOdomAction
 from lifter_controller.msg import GrabAction, GrabGoal, LiftAction, LiftGoal
 from ball_mapper.srv import ClosestBall, ClosestBallRequest
 from geometry_msgs.msg import Point, Quaternion
 from std_msgs.msg import Bool, String
+from tf.transformations import quaternion_from_euler
 
 def main():
     rospy.init_node('master_state_machine')
@@ -22,20 +24,18 @@ def main():
         smach.StateMachine.add("RESET_ROBOT", build_reset_state(),
                                 {"succeeded": "LOAD_INITIAL_BALL"})
         smach.StateMachine.add("LOAD_INITIAL_BALL", build_load_initial_ball_state(),
-                                {"succeeded": "PICKUP_RIGHT_BALL"})
-        smach.StateMachine.add("PICKUP_RIGHT_BALL", build_pickup_right_ball_state(),
-                                {"succeeded": "TEMPORARY_RETURN"})
-        # smach.StateMachine.add("PICKUP_MIDDLE_LEFT_BALLS", build_pickup_middle_left_balls_state(),
-        #                         {"succeeded": "PICKUP_AREA_BALLS"})
+                                {"succeeded": "PICKUP_LEFT_BALL"})
+        smach.StateMachine.add("PICKUP_LEFT_BALL", build_pickup_left_ball_state(),
+                                {"succeeded": "PICKUP_MIDDLE_RIGHT_BALLS"})
+        smach.StateMachine.add("PICKUP_MIDDLE_RIGHT_BALLS", build_pickup_middle_right_balls_state(),
+                                {"succeeded": "RESET_ROBOT"})
         # smach.StateMachine.add("PICKUP_AREA_BALLS", build_pickup_area_balls_state())
 
-        smach.StateMachine.add("TEMPORARY_RETURN", drive_to(1.2, 0.265), {"succeeded": "LOAD_INITIAL_BALL"})
-
+        smach.StateMachine.add("TEMPORARY_RETURN", drive_point(1.2, 0.265), {"succeeded": "LOAD_INITIAL_BALL"})
 
     sis = smach_ros.IntrospectionServer('smach_server', sm, '/SM_ROOT')
     sis.start()
     sm.execute()
-    rospy.spin()
     sis.stop()
 
 class Delay(smach.State):
@@ -82,19 +82,14 @@ def build_load_initial_ball_state():
 
     return sm
 
-def build_pickup_right_ball_state():
+def build_pickup_left_ball_state():
     sm=smach.StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
 
     with sm:
-        smach.StateMachine.add("DRIVE_RIGHT_FIELD", drive_to(1.2, 0.62), {"succeeded": "GRAB_BALL"})
-        smach.StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 0.4), {"succeeded": "DRIVE_RIGHT_BUCKET_FIELD"})
-        smach.StateMachine.add("DRIVE_RIGHT_BUCKET_FIELD", drive_to(1.2, 1.0), {"succeeded": "LIFT_LIFTER"})
-        smach.StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_RIGHT_BUCKET"})
-        smach.StateMachine.add("DRIVE_RIGHT_BUCKET", drive_to(1.2, 1.25), {"succeeded": "OPEN_LEFT_GRABBER"})
-        smach.StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "OPEN_RIGHT_GRABBER"})
-        smach.StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "DRIVE_RIGHT_BUCKET_LOWER"})
-        smach.StateMachine.add("DRIVE_RIGHT_BUCKET_LOWER", drive_to(1.2, 1.0), {"succeeded": "LOWER_LIFTER"})
-        smach.StateMachine.add("LOWER_LIFTER", lower())
+        smach.StateMachine.add("DRIVE_START_FORWARD", drive_pose(1.2, 0.73, 133), {"succeeded": "DRIVE_LEFT_FIELD"})
+        smach.StateMachine.add("DRIVE_LEFT_FIELD", drive_pose(1.04, 0.95, 133), {"succeeded": "GRAB_BALL"})
+        smach.StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 0.4, 133), {"succeeded": "DROP_BUCKET"})
+        smach.StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 
 def build_initial_bumper_wait_state():
@@ -110,13 +105,15 @@ def build_initial_bumper_wait_state():
     return sm
 
 
-def build_pickup_state(grabber_frame, distance_limit):
+def build_pickup_state(grabber_frame, distance_limit, angle):
     sm = smach.StateMachine(outcomes=["succeeded", "preempted", "aborted"])
 
     with sm:
         def drive_ball_goal_cb(userdata, goal, frame):
-            goto_goal = GotoPointGoal()
+            goto_goal = GotoPoseGoal()
             goto_goal.point = userdata.ball_location
+            quat = quaternion_from_euler(0, 0, np.radians(angle))
+            goto_goal.rotation = Quaternion(*quat)
             goto_goal.target_frame = String(data="odom")
             goto_goal.reference_frame = String(data=frame)
             return goto_goal
@@ -126,11 +123,11 @@ def build_pickup_state(grabber_frame, distance_limit):
                 response_slots=["position"]),
                 {"succeeded": "DRIVE_BALL_STAGE", "aborted": "DETECT_CLOSEST_BALL"},
                 remapping={"position": "ball_location"})
-        smach.StateMachine.add("DRIVE_BALL_STAGE", SimpleActionState('goto_point', GotoPointAction,
+        smach.StateMachine.add("DRIVE_BALL_STAGE", SimpleActionState('goto_pose', GotoPoseAction,
                 goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame + "_stage"),
                 input_keys=["ball_location"]),
                 {"succeeded": "DRIVE_BALL"})
-        smach.StateMachine.add("DRIVE_BALL", SimpleActionState('goto_point', GotoPointAction,
+        smach.StateMachine.add("DRIVE_BALL", SimpleActionState('goto_pose', GotoPoseAction,
                 goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame),
                 input_keys=["ball_location"]),
                 {"succeeded": "CLOSE_GRABBER"})
@@ -139,9 +136,66 @@ def build_pickup_state(grabber_frame, distance_limit):
                 {"succeeded": "succeeded"})
     return sm
 
-def drive_to(x, y):
+def build_bucket_drop_state():
+    sm = smach.StateMachine(outcomes=["succeeded", "preempted", "aborted"])
+
+    with sm:
+        smach.StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_pose(0.4, 1.8, 90), {"succeeded": "DRIVE_LEFT_BUCKET"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET", drive_pose(0.22, 2.03, 90), {"succeeded": "OPEN_LEFT_GRABBER"})
+        smach.StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_TURN"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_TURN", drive_pose(0.22, 2.03, 117.5), {"succeeded": "OPEN_RIGHT_GRABBER"})
+        smach.StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_LOWER"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_LOWER", drive_pose(0.5, 1.6, 90), {"succeeded": "LOWER_LIFTER"})
+        smach.StateMachine.add("LOWER_LIFTER", lower())
+
+    return sm
+
+def build_pickup_middle_right_balls_state():
+    sm=smach.StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
+
+    with sm:
+        smach.StateMachine.add("DRIVE_MIDDLE_FIELD", drive_pose(1.2, 1.6, -90), {"succeeded": "GRAB_BALL_MIDDLE"})
+        smach.StateMachine.add("GRAB_BALL_MIDDLE", build_pickup_state("right_grabber", 9999, -90), {"succeeded": "DRIVE_MIDDLE_FIELD_2"})
+        smach.StateMachine.add("DRIVE_MIDDLE_FIELD_2", drive_pose(1.2, 1.6, -90), {"succeeded": "DRIVE_RIGHT_FIELD"})
+        smach.StateMachine.add("DRIVE_RIGHT_FIELD", drive_pose(1.7, 1.6, -90), {"succeeded": "GRAB_BALL_RIGHT"})
+        smach.StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("left_grabber", 9999, -90), {"succeeded": "DROP_BUCKET"})
+        smach.StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
+    return sm
+
+def build_pickup_area_balls_state():
+    sm=smach.StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
+
+    with sm:
+        smach.StateMachine.add("DRIVE_MIDDLE_FIELD", drive_point(1.7, 1.2), {"succeeded": "DRIVE_LEFT_FIELD"})
+        smach.StateMachine.add("DRIVE_LEFT_FIELD", drive_point(0.3, 1.0), {"succeeded": "DRIVE_BALL_PIT_FIELD_RIGHT"})
+        smach.StateMachine.add("DRIVE_BALL_PIT_FIELD_RIGHT", drive_point(0.3, 0.7), {"succeeded": "GRAB_BALL_RIGHT"})
+        smach.StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("right_grabber", 9999), {"succeeded": "DRIVE_BALL_PIT_FIELD_LEFT"})
+        smach.StateMachine.add("DRIVE_BALL_PIT_FIELD_LEFT", drive_point(0.3, 0.7), {"succeeded": "GRAB_BALL_LEFT"})
+        smach.StateMachine.add("GRAB_BALL_LEFT", build_pickup_state("left_grabber", 9999), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_point(0.1, 1.8), {"succeeded": "LIFT_LIFTER"})
+        smach.StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET", drive_point(0.1, 2.0), {"succeeded": "OPEN_LEFT_GRABBER"})
+        smach.StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "OPEN_RIGHT_GRABBER"})
+        smach.StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_LOWER"})
+        smach.StateMachine.add("DRIVE_LEFT_BUCKET_LOWER", drive_point(0.1, 1.8), {"succeeded": "LOWER_LIFTER"})
+        smach.StateMachine.add("LOWER_LIFTER", lower())
+    
+    return sm
+
+def drive_point(x, y):
     return SimpleActionState('goto_point', GotoPointAction,
                 goal=GotoPointGoal(point=Point(x, y, 0), target_frame=String(data="map"), reference_frame=String(data="base_footprint")))
+
+def drive_pose(x, y, angle):
+    point = Point(x, y, 0)
+    quat = quaternion_from_euler(0, 0, np.radians(angle))
+    rotation = Quaternion(*quat)
+    target_frame = String(data="map")
+    reference_frame = String(data="base_footprint")
+
+    goal = GotoPoseGoal(point=point, rotation=rotation, target_frame=target_frame, reference_frame=reference_frame)
+    return SimpleActionState('goto_pose', GotoPoseAction, goal=goal)
 
 def grab(frame):
     return SimpleActionState('grab', GrabAction,
@@ -157,59 +211,5 @@ def lift():
 def lower():
     return SimpleActionState('lift', LiftAction, goal=LiftGoal(position=LiftGoal.DOWN))
 
-
-def build_pickup_middle_left_balls_state():
-    sm=smach.StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
-
-    with sm:
-        smach.StateMachine.add("DRIVE_MIDDLE_FIELD", drive_to(1.7, 1.2), {"succeeded": "GRAB_BALL_RIGHT"})
-        smach.StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("right_grabber", 9999), {"succeeded": "DRIVE_LEFT_FIELD"})
-        smach.StateMachine.add("DRIVE_LEFT_FIELD", drive_to(1.0, 1.2), {"succeeded": "GRAB_BALL_LEFT"})
-        smach.StateMachine.add("GRAB_BALL_LEFT", build_pickup_state("left_grabber", 9999), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
-        smach.StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_to(0.1, 1.8), {"succeeded": "LIFT_LIFTER"})
-        smach.StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET"})
-        smach.StateMachine.add("DRIVE_LEFT_BUCKET", drive_to(0.1, 2.0), {"succeeded": "OPEN_LEFT_GRABBER"})
-        smach.StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "OPEN_RIGHT_GRABBER"})
-        smach.StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_LOWER"})
-        smach.StateMachine.add("DRIVE_LEFT_BUCKET_LOWER", drive_to(0.1, 1.8), {"succeeded": "LOWER_LIFTER"})
-        smach.StateMachine.add("LOWER_LIFTER", lower())
-    return sm
-
-def build_pickup_area_balls_state():
-    sm=smach.StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
-
-    with sm:
-        smach.StateMachine.add("DRIVE_MIDDLE_FIELD", drive_to(1.7, 1.2), {"succeeded": "DRIVE_LEFT_FIELD"})
-        smach.StateMachine.add("DRIVE_LEFT_FIELD", drive_to(0.3, 1.0), {"succeeded": "DRIVE_BALL_PIT_FIELD_RIGHT"})
-        smach.StateMachine.add("DRIVE_BALL_PIT_FIELD_RIGHT", drive_to(0.3, 0.7), {"succeeded": "GRAB_BALL_RIGHT"})
-        smach.StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("right_grabber", 9999), {"succeeded": "DRIVE_BALL_PIT_FIELD_LEFT"})
-        smach.StateMachine.add("DRIVE_BALL_PIT_FIELD_LEFT", drive_to(0.3, 0.7), {"succeeded": "GRAB_BALL_LEFT"})
-        smach.StateMachine.add("GRAB_BALL_LEFT", build_pickup_state("left_grabber", 9999), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
-        smach.StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_to(0.1, 1.8), {"succeeded": "LIFT_LIFTER"})
-        smach.StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET"})
-        smach.StateMachine.add("DRIVE_LEFT_BUCKET", drive_to(0.1, 2.0), {"succeeded": "OPEN_LEFT_GRABBER"})
-        smach.StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "OPEN_RIGHT_GRABBER"})
-        smach.StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_LOWER"})
-        smach.StateMachine.add("DRIVE_LEFT_BUCKET_LOWER", drive_to(0.1, 1.8), {"succeeded": "LOWER_LIFTER"})
-        smach.StateMachine.add("LOWER_LIFTER", lower())
-    
-    return sm
-
 if __name__ == "__main__":
     main()
-
-
-
-
-
-        # smach.StateMachine.add("DELAY_0", Delay(1), {"succeeded": "DRIVE_TEST_1"})
-        # smach.StateMachine.add("DRIVE_TEST_1", drive_to(1.2, 0.5), {"succeeded": "DELAY_1"})
-        # smach.StateMachine.add("DELAY_1", Delay(1), {"succeeded": "DRIVE_TEST_2"})
-        # smach.StateMachine.add("DRIVE_TEST_2", drive_to(1.0, 0.5), {"succeeded": "DELAY_2"})
-        # smach.StateMachine.add("DELAY_2", Delay(1), {"succeeded": "DRIVE_TEST_2p5"})
-        # smach.StateMachine.add("DRIVE_TEST_2p5", drive_to(0.8, 0.5), {"succeeded": "DELAY_2p5"})
-        # smach.StateMachine.add("DELAY_2p5", Delay(1), {"succeeded": "DRIVE_TEST_3"})
-        # smach.StateMachine.add("DRIVE_TEST_3", drive_to(1.4, 0.5), {"succeeded": "DELAY_3"})
-        # smach.StateMachine.add("DELAY_3", Delay(1), {"succeeded": "DRIVE_TEST_4"})
-        # smach.StateMachine.add("DRIVE_TEST_4", drive_to(1.4, 0.5), {"succeeded": "DELAY_4"})
-        # smach.StateMachine.add("DELAY_4", Delay(1), {"succeeded": "succeeded"})

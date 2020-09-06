@@ -115,7 +115,7 @@ double getDistance(tf2::Vector3 a, tf2::Vector3 b) {
 bool closestBall(ball_mapper::ClosestBall::Request &request, ball_mapper::ClosestBall::Response &response)
 {
     double minimumDistance = request.distance_limit;
-    double oppositeGrabberDistanceThreshold = 0.02;
+    double oppositeGrabberDistanceThreshold = 0.03;
 
     tf2::Vector3 grabberLeftLocation = getLocation(referenceFrame, "left_grabber");
     tf2::Vector3 grabberRightLocation = getLocation(referenceFrame, "right_grabber");
