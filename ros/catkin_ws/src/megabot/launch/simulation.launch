@@ -1,28 +1,33 @@
 <launch>
-  <!-- global map server -->
   <node name="map_server" pkg="map_server" type="map_server" args="$(find megabot)/map/map.yaml" />
-  <node name="costmap_2d" pkg="costmap_2d" type="costmap_2d_node">
+  <!-- <node name="costmap_2d" pkg="costmap_2d" type="costmap_2d_node">
     <rosparam ns="costmap" command="load" file="$(find megabot)/map/costmap.yaml"/>
-  </node>
+  </node> -->
 
-  <!-- description of target ball -->
   <param name="ball_description" command="cat $(find megabot)/urdf/tennis_ball.urdf" />
   
-  <!-- megabot robot nodes -->
   <group ns="megabot">
-    <!-- megabot robot config file -->
     <rosparam command="load" file="$(find megabot)/config/megabot.yaml"/>
-
-    <!-- megabot robot description -->
     <param name="description" command="$(find xacro)/xacro --inorder $(find megabot)/urdf/megabot.urdf.xacro"/>
 
-    <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
+    <group ns="camera">
+      <node pkg="nodelet" type="nodelet" name="image_proc_nodelet"  args="manager"/>
 
-    <!-- ball finding nodes -->
+      <node pkg="nodelet" type="nodelet" name="debayer"
+            args="load image_proc/debayer image_proc_nodelet"
+            respawn="true" />
+            
+      <node pkg="nodelet" type="nodelet" name="rectify_color"
+            args="load image_proc/rectify image_proc_nodelet"
+            respawn="true">
+        <remap from="image_mono" to="image_color" />
+        <remap from="image_rect" to="image_rect_color" />
+      </node>
+    </group>
+
     <node name="ball_locator" pkg="ball_locator" type="ball_locator_node" output="screen"/>
     <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" output="screen"/>
 
-    <!-- robot localisation nodes -->
     <node name="line_locator" pkg="line_locator" type="line_locator_node" output="screen"/>
     <node pkg="localisation" type="localisation_node" name="localisation" output="screen"/>
     
@@ -30,6 +35,5 @@
       <remap from="robot_description" to="description" />
       <remap from="joint_states" to="joint_states" />
     </node>
-
   </group>
 </launch>
