@@ -4,6 +4,7 @@ public:
     SpeedCurve();
     void setAcceleration(double acceleration);
     void setDistanceCoefficient(double coefficient);
+    void setMinSpeed(double minSpeed);
     void setMaxSpeed(double maxSpeed);
     void setLoopPeriod(double loopPeriod);
 
@@ -19,5 +20,6 @@ private:
 
     double acceleration;
     double distanceCoefficient;
+    double minSpeed;
     double maxSpeed;
 };

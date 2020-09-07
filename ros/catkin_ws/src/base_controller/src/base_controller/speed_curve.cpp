@@ -5,7 +5,7 @@
 #include <ros/ros.h>
 
 SpeedCurve::SpeedCurve()
-    : acceleration(0.1), distanceCoefficient(0.1), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
+    : acceleration(0.1), distanceCoefficient(0.1), minSpeed(0.1), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
 {
     reset();
 }
@@ -23,6 +23,10 @@ void SpeedCurve::setDistanceCoefficient(double coefficient) {
     this->distanceCoefficient = coefficient;
 }
 
+void SpeedCurve::setMinSpeed(double minSpeed) {
+    this->minSpeed = minSpeed;
+}
+
 void SpeedCurve::setMaxSpeed(double maxSpeed)
 {
     this->maxSpeed = maxSpeed;
@@ -35,7 +39,7 @@ void SpeedCurve::setLoopPeriod(double loopPeriod)
 
 void SpeedCurve::setTargetDistance(double distance)
 {   
-    double speedMagnitude = 2 * distanceCoefficient * fabs(distance);
+    double speedMagnitude = minSpeed + 2 * distanceCoefficient * fabs(distance);
     targetSpeed = std::copysign(speedMagnitude, distance);
 }
 
@@ -61,9 +65,6 @@ double SpeedCurve::getNextSpeed()
     if (fabs(currentSpeed) > maxSpeed) {
         currentSpeed = std::copysign(maxSpeed, currentSpeed);
     }
-
-    ROS_INFO("speed:%f", currentSpeed);
-    ROS_INFO("target:%f", targetSpeed);
 
     return currentSpeed;
 }

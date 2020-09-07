@@ -11,6 +11,7 @@ GotoAction::GotoAction()
     double loopPeriod = 1. / LOOP_RATE;
 
     translationSpeedCurve.setAcceleration(0.1);
+    translationSpeedCurve.setMinSpeed(0.1);
     translationSpeedCurve.setMaxSpeed(0.5);
     translationSpeedCurve.setLoopPeriod(loopPeriod);
 
@@ -18,6 +19,7 @@ GotoAction::GotoAction()
     accelerationLimiter.setLoopPeriod(loopPeriod);
 
     rotationSpeedCurve.setAcceleration(0.1);
+    rotationSpeedCurve.setMinSpeed(0.1);
     rotationSpeedCurve.setMaxSpeed(0.5);
     rotationSpeedCurve.setLoopPeriod(loopPeriod);
 
@@ -28,12 +30,14 @@ GotoAction::GotoAction()
 
 void GotoAction::setConfig(base_controller::BaseControllerConfig &config) {
     translationSpeedCurve.setAcceleration(config.translation_speed_curve_acceleration);
+    translationSpeedCurve.setMinSpeed(config.translation_speed_curve_min_speed);
     translationSpeedCurve.setMaxSpeed(config.translation_speed_curve_max_speed);
     translationSpeedCurve.setDistanceCoefficient(config.translation_speed_curve_distance_coefficient);
 
     accelerationLimiter.setMaxAcceleration(config.translation_acceleration_limiter_max_acceleration);
 
     rotationSpeedCurve.setAcceleration(config.angle_speed_curve_acceleration);
+    rotationSpeedCurve.setMinSpeed(config.angle_speed_curve_min_speed);
     rotationSpeedCurve.setMaxSpeed(config.angle_speed_curve_max_speed);
     rotationSpeedCurve.setDistanceCoefficient(config.angle_speed_curve_distance_coefficient);
 }
