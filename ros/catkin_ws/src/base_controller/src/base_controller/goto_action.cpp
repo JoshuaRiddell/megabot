@@ -4,9 +4,8 @@
 
 #define LOOP_RATE 20
 
-GotoAction::GotoAction(std::string actionName)
+GotoAction::GotoAction()
     : tfListener(tfBuffer),
-      actionName(actionName),
       loopRate(LOOP_RATE)
 {
     double loopPeriod = 1. / LOOP_RATE;
@@ -153,11 +152,6 @@ void GotoAction::resetCmdVel() {
     cmdVel.angular.x = 0;
     cmdVel.angular.y = 0;
     cmdVel.angular.z = 0;
-}
-
-bool GotoAction::isRosPreempted()
-{
-    return !ros::ok();
 }
 
 bool GotoAction::isReachedGoal()

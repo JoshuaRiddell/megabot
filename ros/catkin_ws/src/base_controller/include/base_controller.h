@@ -7,25 +7,29 @@
 
 #include <tf2/LinearMath/Transform.h>
 
-class GotoPointAction : public GotoAction {
+class GotoPointAction {
 public:
     GotoPointAction(std::string actionName);
 
     void executeCallback(const base_controller::GotoPointGoalConstPtr &goal);
 
 private:
+    ros::NodeHandle nh;
+
     actionlib::SimpleActionServer<base_controller::GotoPointAction> actionServer;
     base_controller::GotoPointFeedback feedback;
     base_controller::GotoPointResult result;
 };
 
-class GotoPoseAction : public GotoAction {
+class GotoPoseAction {
 public:
     GotoPoseAction(std::string actionName);
 
     void executeCallback(const base_controller::GotoPoseGoalConstPtr &goal);
 
 private:
+    ros::NodeHandle nh;
+
     actionlib::SimpleActionServer<base_controller::GotoPoseAction> actionServer;
     base_controller::GotoPoseFeedback feedback;
     base_controller::GotoPoseResult result;

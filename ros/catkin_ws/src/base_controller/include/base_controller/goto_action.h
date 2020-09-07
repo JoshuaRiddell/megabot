@@ -14,25 +14,21 @@
 
 class GotoAction {
 public:
+    GotoAction();
+
     void setConfig(base_controller::BaseControllerConfig &config);
 
-protected:
-    GotoAction(std::string name);
-
-    void resetControllers();
     void setRobotFrame(std_msgs::String robotFrameMsg);
     void setTargetFrame(std_msgs::String targetFrameMsg);
     void setGoalPoint(geometry_msgs::Point pointMsg);
     void setGoalRotation(geometry_msgs::Quaternion angleMsg);
 
-    void publishNextCmdVel();
-    void loopDelay();
+    void resetControllers();
     void stopRobot();
+    void publishNextCmdVel();
 
-    bool isRosPreempted();
     bool isReachedGoal();
-
-    ros::NodeHandle nh;
+    void loopDelay();
 
 private:
     tf2::Transform getTransform(std::string startFrame, std::string endFrame);
@@ -42,13 +38,12 @@ private:
     void publishCmdVel();
     void resetCmdVel();
 
+    ros::NodeHandle nh;
 
     ros::Publisher cmdVelPub;
 
     std::string robotFrame;
     std::string targetFrame;
-
-    std::string actionName;
 
     tf2_ros::Buffer tfBuffer;
     tf2_ros::TransformListener tfListener;

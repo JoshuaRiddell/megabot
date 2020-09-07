@@ -12,77 +12,69 @@
 #include <base_controller/BaseControllerConfig.h>
 #include <base_controller/reset_odom_action.h>
 
-GotoPointAction *pointAction;
-GotoPoseAction *poseAction;
+GotoAction gotoAction;
 
 GotoPointAction::GotoPointAction(std::string actionName)
-    : GotoAction(actionName),
-      actionServer(nh, actionName, boost::bind(&GotoPointAction::executeCallback, this, _1), false)
+    : actionServer(nh, actionName, boost::bind(&GotoPointAction::executeCallback, this, _1), false)
 {
     actionServer.start();
 }
 
 void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstPtr &goal) {
-    resetControllers();
-    setRobotFrame(goal->reference_frame);
-    setTargetFrame(goal->target_frame);
-    setGoalPoint(goal->point);
+    ros::Rate delay(10);
+
+    gotoAction.setRobotFrame(goal->reference_frame);
+    gotoAction.setTargetFrame(goal->target_frame);
+    gotoAction.setGoalPoint(goal->point);
 
     while (true) {
-        publishNextCmdVel();
-
-        if (isRosPreempted() || actionServer.isPreemptRequested()) {
+        if (!ros::ok() || actionServer.isPreemptRequested()) {
             actionServer.setPreempted();
             break;
         }
 
-        if (isReachedGoal()) {
+        if (gotoAction.isReachedGoal()) {
             actionServer.setSucceeded();
             break;
         }
-
-        loopDelay();
+        
+        delay.sleep();
     }
-
-    stopRobot();
 }
 
 GotoPoseAction::GotoPoseAction(std::string actionName)
-    : GotoAction(actionName),
-      actionServer(nh, actionName, boost::bind(&GotoPoseAction::executeCallback, this, _1), false)
+    : actionServer(nh, actionName, boost::bind(&GotoPoseAction::executeCallback, this, _1), false)
 {
     actionServer.start();
 }
 
 void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr &goal)
 {
-    resetControllers();
-    setRobotFrame(goal->reference_frame);
-    setTargetFrame(goal->target_frame);
-    setGoalPoint(goal->point);
-    setGoalRotation(goal->rotation);
+    ros::Rate delay(10);
+
+    gotoAction.setRobotFrame(goal->reference_frame);
+    gotoAction.setTargetFrame(goal->target_frame);
+    gotoAction.setGoalPoint(goal->point);
+    gotoAction.setGoalRotation(goal->rotation);
 
     while (true) {
-        publishNextCmdVel();
-
-        if (isRosPreempted() || actionServer.isPreemptRequested()) {
+        if (!ros::ok() || actionServer.isPreemptRequested()) {
             actionServer.setPreempted();
             break;
         }
 
-        if (isReachedGoal()) {
+        if (gotoAction.isReachedGoal()) {
             actionServer.setSucceeded();
             break;
         }
-
-        loopDelay();
+        
+        delay.sleep();
     }
 }
 
 void reconfigureCallback(base_controller::BaseControllerConfig &config, uint32_t level)
 {
-    pointAction->setConfig(config);
-    poseAction->setConfig(config);
+    gotoAction.setConfig(config);
 }
 
 int main(int argc, char **argv)
@@ -94,15 +86,20 @@ int main(int argc, char **argv)
     GotoPoseAction gotoPoseAction("goto_pose");
     ResetOdomAction resetOdom("reset_odom");
 
-    pointAction = &gotoPointAction;
-    poseAction = &gotoPoseAction;
-    
     dynamic_reconfigure::Server<base_controller::BaseControllerConfig> server;
     dynamic_reconfigure::Server<base_controller::BaseControllerConfig>::CallbackType serverCallback;
     serverCallback = boost::bind(&reconfigureCallback, _1, _2);
     server.setCallback(serverCallback);
 
-    ros::spin();
+    gotoAction.resetControllers();
+
+    while (ros::ok()) {
+        ros::spinOnce();
+        gotoAction.publishNextCmdVel();
+        gotoAction.loopDelay();
+    }
+
+    gotoAction.stopRobot();
 
     return 0;
 }
