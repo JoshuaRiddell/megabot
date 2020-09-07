@@ -85,7 +85,7 @@ void displayCb(const std_msgs::String& msg) {
 }
 
 void toggleStep() {
-  static const int stepDelay = 40;
+  static const int stepDelay = 60;
   
   if (!digitalRead(currentStepperEndPin)) {
     for (int i = 0; i < loopDelayTime * 1000 / stepDelay / 2; ++i) {
