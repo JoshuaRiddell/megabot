@@ -21,7 +21,9 @@ public:
     void setRobotFrame(std_msgs::String robotFrameMsg);
     void setTargetFrame(std_msgs::String targetFrameMsg);
     void setGoalPoint(geometry_msgs::Point pointMsg);
+    void setDistanceThreshold(double distanceThreshold);
     void setGoalRotation(geometry_msgs::Quaternion angleMsg);
+    void setRotationThreshold(double rotationThreshold);
 
     void resetControllers();
     void stopRobot();
@@ -60,8 +62,8 @@ private:
     bool hasReachedTranslationGoal;
     bool hasReachedRotationGoal;
 
-    const double distanceThreshold = 0.01;
-    const double rotationThreshold = 0.05;
+    double distanceThreshold;
+    double rotationThreshold;
 
     ros::Rate loopRate;
 };

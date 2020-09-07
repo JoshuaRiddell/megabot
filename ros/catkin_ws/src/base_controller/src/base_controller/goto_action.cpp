@@ -6,7 +6,9 @@
 
 GotoAction::GotoAction()
     : tfListener(tfBuffer),
-      loopRate(LOOP_RATE)
+      loopRate(LOOP_RATE),
+      distanceThreshold(0.01),
+      rotationThreshold(0.05)
 {
     double loopPeriod = 1. / LOOP_RATE;
 
@@ -65,9 +67,17 @@ void GotoAction::setGoalPoint(geometry_msgs::Point pointMsg)
     tf2::fromMsg(pointMsg, goalPoint);
 }
 
+void GotoAction::setDistanceThreshold(double distanceThreshold) {
+    this->distanceThreshold = distanceThreshold;
+}
+
 void GotoAction::setGoalRotation(geometry_msgs::Quaternion angleMsg)
 {
     tf2::fromMsg(angleMsg, goalRotation);
+}
+
+void GotoAction::setRotationThreshold(double rotationThreshold) {
+    this->rotationThreshold = rotationThreshold;
 }
 
 void GotoAction::publishNextCmdVel()
@@ -88,15 +98,7 @@ void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {
 
     double distance = displacement.length();
 
-    if (fabs(distance) < distanceThreshold) {
-        hasReachedTranslationGoal = true;
-        cmdVel.linear.x = 0;
-        cmdVel.linear.y = 0;
-        cmdVel.linear.z = 0;
-        return;
-    } else {
-        hasReachedTranslationGoal = false;
-    }
+    hasReachedTranslationGoal = fabs(distance) < distanceThreshold;
 
     translationSpeedCurve.setTargetDistance(distance);
     double speed = translationSpeedCurve.getNextSpeed();
@@ -121,17 +123,11 @@ void GotoAction::updateRotationVelocity(tf2::Transform robotTransform) {
     tf2::Matrix3x3(angularDisplacement).getRPY(roll, pitch, yaw);
     double angularDistance = yaw;
 
-    if (fabs(angularDistance) < rotationThreshold) {
-        rotationSpeedCurve.setCurrentSpeed(0);
-        hasReachedRotationGoal = true;
-        cmdVel.angular.z = 0;
-        return;
-    } else {
-        hasReachedRotationGoal = false;
-        rotationSpeedCurve.setTargetDistance(angularDistance);
-        double angularSpeed = rotationSpeedCurve.getNextSpeed();
-        cmdVel.angular.z = angularSpeed;
-    }
+    hasReachedRotationGoal = fabs(angularDistance) < rotationThreshold;
+
+    rotationSpeedCurve.setTargetDistance(angularDistance);
+    double angularSpeed = rotationSpeedCurve.getNextSpeed();
+    cmdVel.angular.z = angularSpeed;
 }
 
 void GotoAction::publishCmdVel() {
