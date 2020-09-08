@@ -14,6 +14,11 @@ public:
     void reset();
 
 private:
+    bool targetSpeedReachableInSingleStep();
+    bool speedIncreaseRequried();
+    void incrementSpeed();
+    void decrementSpeed();
+
     double currentSpeed;
     double targetSpeed;
     double loopPeriod;
