@@ -2,11 +2,8 @@
 #include <Servo.h>
 //#include <LiquidCrystal_I2C.h>
 
-#include <std_msgs/Int8.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/String.h>
-
-#include <TimerOne.h>
 
 enum {
   STEPPER_DOWN = -1,
@@ -17,19 +14,19 @@ enum {
 Servo leftGripper;
 Servo rightGripper;
 
-const int loopDelayTime = 10;
+#define LOOP_DELAY_TIME 10
 
-const int leftGripperPin = 9;
-const int leftGripperStart = 90;
-const int rightGripperPin = 10;
-const int rightGripperStart = 90;
+#define LEFT_GRIPPER_PIN 9
+#define LEFT_GRIPPER_START 90
+#define RIGHT_GRIPPER_PIN 10
+#define RIGHT_GRIPPER_START 90
 
-const int stepperDirPin = A1;
-const int stepperStepPin = A2;
-const int stepperUpEndPin = 11;
-const int stepperDownEndPin = 12;
-const int stepperEnablePin = A3;
-int currentStepperEndPin = stepperDownEndPin;
+#define STEPPER_DIR_PIN A1
+#define STEPPER_STEP_PIN A2
+#define STEPPER_UP_END_PIN 11
+#define STEPPER_DOWN_END_PIN 12
+#define STEPPER_ENABLE_PIN A3
+int currentStepperEndPin = STEPPER_DOWN_END_PIN;
 int currentStepperDirection = 0;
 
 //LiquidCrystal_I2C lcd(0x27, 16, 2);
@@ -67,13 +64,13 @@ void stepperCb(const std_msgs::Int16& msg) {
 void setStepperDirection(int direction) {
   switch (direction) {
     case STEPPER_DOWN:
-      digitalWrite(stepperDirPin, HIGH);
-      currentStepperEndPin = stepperDownEndPin;
+      digitalWrite(STEPPER_DIR_PIN, HIGH);
+      currentStepperEndPin = STEPPER_DOWN_END_PIN;
       currentStepperDirection = STEPPER_DOWN;
       break;
     case STEPPER_UP:
-      digitalWrite(stepperDirPin, LOW);
-      currentStepperEndPin = stepperUpEndPin;
+      digitalWrite(STEPPER_DIR_PIN, LOW);
+      currentStepperEndPin = STEPPER_UP_END_PIN;
       currentStepperDirection = STEPPER_UP;
       break;
   }
@@ -88,10 +85,10 @@ void toggleStep() {
   static const int stepDelay = 60;
   
   if (!digitalRead(currentStepperEndPin)) {
-    for (int i = 0; i < loopDelayTime * 1000 / stepDelay / 2; ++i) {
-      digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
+    for (int i = 0; i < LOOP_DELAY_TIME * 1000 / stepDelay / 2; ++i) {
+      digitalWrite(STEPPER_STEP_PIN, !digitalRead(STEPPER_STEP_PIN));
       delayMicroseconds(stepDelay);
-      digitalWrite(stepperStepPin, !digitalRead(stepperStepPin));
+      digitalWrite(STEPPER_STEP_PIN, !digitalRead(STEPPER_STEP_PIN));
       delayMicroseconds(stepDelay);
     }
 
@@ -105,7 +102,7 @@ void toggleStep() {
       stepperStatusPub.publish(&stepperStatusMsg);
     }
 
-    delay(loopDelayTime);
+    delay(LOOP_DELAY_TIME);
   }
 }
 
@@ -117,24 +114,24 @@ void setup() {
 }
 
 void setupGrippers() {
-  leftGripper.attach(leftGripperPin);
-  rightGripper.attach(rightGripperPin);
+  leftGripper.attach(LEFT_GRIPPER_PIN);
+  rightGripper.attach(RIGHT_GRIPPER_PIN);
 
-  leftGripper.write(leftGripperStart);
-  rightGripper.write(rightGripperStart);
+  leftGripper.write(LEFT_GRIPPER_START);
+  rightGripper.write(RIGHT_GRIPPER_START);
   
   nh.subscribe(leftGripperSub);
   nh.subscribe(rightGripperSub);
 }
 
 void setupStepper() {
-  pinMode(stepperDirPin, OUTPUT);
-  pinMode(stepperStepPin, OUTPUT);
-  pinMode(stepperEnablePin, OUTPUT);
-  pinMode(stepperUpEndPin, INPUT);
-  pinMode(stepperDownEndPin, INPUT);
+  pinMode(STEPPER_DIR_PIN, OUTPUT);
+  pinMode(STEPPER_STEP_PIN, OUTPUT);
+  pinMode(STEPPER_ENABLE_PIN, OUTPUT);
+  pinMode(STEPPER_UP_END_PIN, INPUT);
+  pinMode(STEPPER_DOWN_END_PIN, INPUT);
 
-  digitalWrite(stepperEnablePin, LOW);
+  digitalWrite(STEPPER_ENABLE_PIN, LOW);
   setStepperDirection(STEPPER_UP);
 
   nh.subscribe(stepperSub);
