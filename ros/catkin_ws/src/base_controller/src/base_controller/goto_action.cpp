@@ -35,6 +35,7 @@ void GotoAction::setConfig(base_controller::BaseControllerConfig &config) {
     translationSpeedCurve.setMinSpeed(config.translation_speed_curve_min_speed);
     translationSpeedCurve.setMaxSpeed(config.translation_speed_curve_max_speed);
     translationSpeedCurve.setDistanceCoefficient(config.translation_speed_curve_distance_coefficient);
+    translationSpeedCurve.setDistanceDeadband(config.translation_speed_curve_distance_deadband);
 
     accelerationLimiter.setMaxAcceleration(config.translation_acceleration_limiter_max_acceleration);
 
@@ -42,6 +43,7 @@ void GotoAction::setConfig(base_controller::BaseControllerConfig &config) {
     rotationSpeedCurve.setMinSpeed(config.angle_speed_curve_min_speed);
     rotationSpeedCurve.setMaxSpeed(config.angle_speed_curve_max_speed);
     rotationSpeedCurve.setDistanceCoefficient(config.angle_speed_curve_distance_coefficient);
+    rotationSpeedCurve.setDistanceDeadband(config.angle_speed_curve_distance_deadband);
 }
 
 void GotoAction::resetControllers()
