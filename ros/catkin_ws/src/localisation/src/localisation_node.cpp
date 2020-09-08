@@ -23,7 +23,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     tf2::convert(msg.pose.orientation, measuredRotation);
     tf2::convert(msg.pose.position, measuredEndpoint);
 
-    double matchedThreshold = 0.2;
+    double matchedThreshold = 0.3;
 
     int matchedIndex = -1;
     for (int i = 0; i < mapLineEnds.size(); ++i) {
@@ -40,7 +40,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
         return;
     }
 
-    double matchedAngleThreshold = 0.15;
+    double matchedAngleThreshold = 0.26;
     tf2::Quaternion matchedRotation = mapLineAngles.at(matchedIndex);
 
     if (matchedRotation.angleShortestPath(measuredRotation) > M_PI_2) {
@@ -56,7 +56,6 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     if (angleDifference.getAngle() > matchedAngleThreshold) {
         return;
     }
-
 
     tf2::Vector3 correctionOrigin = mapLineEnds.at(matchedIndex) - measuredEndpoint;
     tf2::Quaternion correctionRotation = angleDifference;
@@ -90,16 +89,16 @@ void addLine(double x, double y, double angle) {
 
 void loadMapLines() {
     // single vertical
-    addLine(1.2, 0, M_PI/2);
-    addLine(1.2, 1.2, M_PI/2);
+    // addLine(1.2, 0, M_PI/2);
+    // addLine(1.2, 1.2, M_PI/2);
 
     // left diagonal
-    addLine(0.71, 1.2, 2.094);
-    addLine(0.16, 2.143, 2.094);
+    addLine(0.7, 1.2, 2.02);
+    // addLine(0.16, 2.143, 2.094);
 
     // right diagonal
-    addLine(2.24, 2.143, 1.0472);
-    addLine(1.69, 1.2, 1.0472);
+    // addLine(2.24, 2.143, 1.0472);
+    // addLine(1.69, 1.2, 1.0472);
 }
 
 bool setLocationCallback(localisation::SetPosition::Request &request,
