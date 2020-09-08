@@ -41,7 +41,7 @@ camera:
   camera_name: camera
   debayer:
     debayer: 0
-  exposure: 40
+  exposure: 2000
   framerate: 10
   gain: 0
   image_color:
@@ -372,7 +372,7 @@ line_locator:
   s_high: 32
   s_low: 0
   v_high: 255
-  v_low: 141
+  v_low: 75
 magnetic:
   drift: 0.0
   drift_frequency: 0.0
