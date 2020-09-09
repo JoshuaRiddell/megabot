@@ -16,6 +16,8 @@ public:
     void setMorphSize(int size);
     void setErodeCount(int count);
     void setDilateCount(int count);
+    void setErode2Count(int count);
+    void setDilate2Count(int count);
 
     std::vector<cv::Point> getBallImageCentres(const cv::Mat &img);
 
@@ -38,5 +40,7 @@ private:
     float circularityHighThreshold = 1.;
     int erodeCount = 2;
     int dilateCount = 2;
+    int erode2Count = 2;
+    int dilate2Count = 2;
     int morphSize = 2;
 };

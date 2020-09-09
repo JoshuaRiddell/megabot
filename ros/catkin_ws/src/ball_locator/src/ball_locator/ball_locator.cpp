@@ -27,6 +27,9 @@ contours_t BallLocator::getContours(const cv::Mat &img) {
     cv::erode(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), erodeCount);
     cv::dilate(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), dilateCount);
 
+    cv::erode(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), erodeCount);
+    cv::dilate(thresholdedImage, thresholdedImage, element, cv::Point(-1,-1), dilateCount);
+
     contours_t contours;
     cv::findContours(thresholdedImage, contours, cv::RETR_LIST, cv::CHAIN_APPROX_SIMPLE);
     return contours;
@@ -118,4 +121,12 @@ void BallLocator::setErodeCount(int count) {
 
 void BallLocator::setDilateCount(int count) {
     dilateCount = count;
+}
+
+void BallLocator::setErode2Count(int count) {
+    erode2Count = count;
+}
+
+void BallLocator::setDilate2Count(int count) {
+    dilate2Count = count;
 }
