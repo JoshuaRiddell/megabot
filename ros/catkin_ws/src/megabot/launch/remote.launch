@@ -26,7 +26,7 @@
             <param name="framerate" value="10"/>
             <param name="autoexposure" value="false"/>
             <!-- <param name="exposure" value="40"/> -->
-            <param name="exposure" value="2000"/>
+            <param name="exposure" value="1500"/>
         </node>
         <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
 
@@ -43,7 +43,6 @@
 
         <node pkg="line_locator" type="line_locator_node" name="line_locator" machine="pi"/>
         <node pkg="localisation" type="localisation_node" name="localisation" machine="pi"/>
-        <node pkg="base_controller" type="base_controller_node" name="base_controller" machine="pi"/>
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
             <remap from="robot_description" to="description" />

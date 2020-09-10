@@ -12,7 +12,7 @@
 #include <base_controller/BaseControllerConfig.h>
 #include <base_controller/reset_odom_action.h>
 
-GotoAction gotoAction;
+GotoAction *gotoActionPtr;
 
 GotoPointAction::GotoPointAction(std::string actionName)
     : actionServer(nh, actionName, boost::bind(&GotoPointAction::executeCallback, this, _1), false)
@@ -23,9 +23,10 @@ GotoPointAction::GotoPointAction(std::string actionName)
 void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstPtr &goal) {
     ros::Rate delay(10);
 
-    gotoAction.setRobotFrame(goal->reference_frame);
-    gotoAction.setTargetFrame(goal->target_frame);
-    gotoAction.setGoalPoint(goal->point);
+    gotoActionPtr->setRobotFrame(goal->reference_frame);
+    gotoActionPtr->setTargetFrame(goal->target_frame);
+    gotoActionPtr->setGoalPoint(goal->point);
+    gotoActionPtr->setDistanceThreshold(goal->distance_threshold.data);
 
     while (true) {
         if (!ros::ok() || actionServer.isPreemptRequested()) {
@@ -33,7 +34,7 @@ void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstP
             break;
         }
 
-        if (gotoAction.isReachedGoal()) {
+        if (gotoActionPtr->isReachedGoal()) {
             actionServer.setSucceeded();
             break;
         }
@@ -52,10 +53,12 @@ void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr
 {
     ros::Rate delay(10);
 
-    gotoAction.setRobotFrame(goal->reference_frame);
-    gotoAction.setTargetFrame(goal->target_frame);
-    gotoAction.setGoalPoint(goal->point);
-    gotoAction.setGoalRotation(goal->rotation);
+    gotoActionPtr->setRobotFrame(goal->reference_frame);
+    gotoActionPtr->setTargetFrame(goal->target_frame);
+    gotoActionPtr->setGoalPoint(goal->point);
+    gotoActionPtr->setGoalRotation(goal->rotation);
+    gotoActionPtr->setDistanceThreshold(goal->distance_threshold.data);
+    gotoActionPtr->setRotationThreshold(goal->rotation_threshold.data);
 
     while (true) {
         if (!ros::ok() || actionServer.isPreemptRequested()) {
@@ -63,7 +66,7 @@ void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr
             break;
         }
 
-        if (gotoAction.isReachedGoal()) {
+        if (gotoActionPtr->isReachedGoal()) {
             actionServer.setSucceeded();
             break;
         }
@@ -74,13 +77,16 @@ void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr
 
 void reconfigureCallback(base_controller::BaseControllerConfig &config, uint32_t level)
 {
-    gotoAction.setConfig(config);
+    gotoActionPtr->setConfig(config);
 }
 
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_controller");
     ros::NodeHandle nh;
+
+    GotoAction gotoAction;
+    gotoActionPtr = &gotoAction;
 
     GotoPointAction gotoPointAction("goto_point");
     GotoPoseAction gotoPoseAction("goto_pose");

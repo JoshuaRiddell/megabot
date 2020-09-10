@@ -27,6 +27,9 @@ GotoAction::GotoAction()
 
     cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
 
+    robotFrame = "base_footprint";
+    targetFrame = "odom";
+    goalPoint = tf2::Vector3(1.2, 0.17, 0);
     goalRotation.setEuler(0, 0, M_PI_2);
 }
 
@@ -67,6 +70,7 @@ void GotoAction::setTargetFrame(std_msgs::String targetFrameMsg)
 void GotoAction::setGoalPoint(geometry_msgs::Point pointMsg)
 {
     tf2::fromMsg(pointMsg, goalPoint);
+    hasReachedTranslationGoal = false;
 }
 
 void GotoAction::setDistanceThreshold(double distanceThreshold) {
@@ -76,6 +80,7 @@ void GotoAction::setDistanceThreshold(double distanceThreshold) {
 void GotoAction::setGoalRotation(geometry_msgs::Quaternion angleMsg)
 {
     tf2::fromMsg(angleMsg, goalRotation);
+    hasReachedRotationGoal = false;
 }
 
 void GotoAction::setRotationThreshold(double rotationThreshold) {
@@ -89,9 +94,13 @@ void GotoAction::publishNextCmdVel()
 }
 
 void GotoAction::updateCmdVel() {
-    tf2::Transform robotTransform = getTransform(targetFrame, robotFrame);
-    updateTranslationVelocity(robotTransform);
-    updateRotationVelocity(robotTransform);
+    try {
+        tf2::Transform robotTransform = getTransform(targetFrame, robotFrame);
+        updateTranslationVelocity(robotTransform);
+        updateRotationVelocity(robotTransform);
+    } catch (std::exception &e) {
+        ROS_ERROR("%s", e.what());
+    }
 }
 
 void GotoAction::updateTranslationVelocity(tf2::Transform robotTransform) {

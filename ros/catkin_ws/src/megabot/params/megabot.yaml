@@ -20,28 +20,34 @@ ball_locator:
   circularity_low: 0.53
   h_high: 53
   h_low: 12
-  morph_dilate_count: 2
-  morph_erode_count: 2
-  morph_size: 2
+  morph_dilate_2_count: 3
+  morph_dilate_count: 7
+  morph_erode_2_count: 7
+  morph_erode_count: 3
+  morph_size: 5
   s_high: 255
   s_low: 46
   v_high: 255
-  v_low: 19
+  v_low: 18
 base_controller:
   angle_speed_curve_acceleration: 2.0
   angle_speed_curve_distance_coefficient: 0.6
-  angle_speed_curve_max_speed: 2.0
+  angle_speed_curve_distance_deadband: 0.01
+  angle_speed_curve_max_speed: 0.792
+  angle_speed_curve_min_speed: 0.05
   translation_acceleration_limiter_max_acceleration: 3.0
   translation_speed_curve_acceleration: 0.5
   translation_speed_curve_distance_coefficient: 0.3
-  translation_speed_curve_max_speed: 1.5
+  translation_speed_curve_distance_deadband: 0.01
+  translation_speed_curve_max_speed: 2.107
+  translation_speed_curve_min_speed: 0.05
 camera:
   autoexposure: false
   camera_frame_id: camera_link
   camera_name: camera
   debayer:
     debayer: 0
-  exposure: 2000
+  exposure: 1500
   framerate: 10
   gain: 0
   image_color:
@@ -372,7 +378,7 @@ line_locator:
   s_high: 32
   s_low: 0
   v_high: 255
-  v_low: 75
+  v_low: 122
 magnetic:
   drift: 0.0
   drift_frequency: 0.0
