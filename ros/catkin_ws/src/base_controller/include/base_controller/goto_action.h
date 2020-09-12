@@ -12,20 +12,25 @@
 #include <geometry_msgs/Point.h>
 #include <geometry_msgs/Quaternion.h>
 
+#include <ecl/ipc.hpp>
+
 class GotoAction {
 public:
     GotoAction();
 
     void setConfig(base_controller::BaseControllerConfig &config);
 
-    void setRobotFrame(std_msgs::String robotFrameMsg);
-    void setTargetFrame(std_msgs::String targetFrameMsg);
+    void setRobotFrame(std::string robotFrameMsg);
+    void setTargetFrame(std::string targetFrameMsg);
     void setGoalPoint(geometry_msgs::Point pointMsg);
     void setDistanceThreshold(double distanceThreshold);
     void setGoalRotation(geometry_msgs::Quaternion angleMsg);
     void setRotationThreshold(double rotationThreshold);
 
     void resetControllers();
+    void resetPosition();
+    void disable();
+    void enable();
     void stopRobot();
     void publishNextCmdVel();
 
@@ -59,6 +64,7 @@ private:
     tf2::Vector3 goalPoint;
     tf2::Quaternion goalRotation;
 
+    bool enabled;
     bool hasReachedTranslationGoal;
     bool hasReachedRotationGoal;
 
@@ -66,5 +72,7 @@ private:
     double rotationThreshold;
 
     ros::Rate loopRate;
+
+    ecl::Semaphore semaphore;
 };
 

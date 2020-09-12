@@ -26,7 +26,11 @@ void AccelerationLimiter::setTargetVelocity(tf2::Vector3 velocity)
 
 void AccelerationLimiter::setTargetSpeedDirection(double speed, tf2::Vector3 direction)
 {
-    targetVelocity = direction.normalize() * speed;
+    if (direction.length() < 0.001 || speed < 0.001) {
+        targetVelocity = tf2::Vector3(0, 0, 0);
+    } else {
+        targetVelocity = direction.normalize() * speed;
+    }
 }
 
 tf2::Vector3 AccelerationLimiter::getNextVelocity()

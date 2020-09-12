@@ -17,6 +17,7 @@
   <depend>actionlib</depend>
   <depend>tf2_ros</depend>
   <depend>dynamic_reconfigure</depend>
+  <depend>ecl_ipc</depend>
 
   <export>
   </export>

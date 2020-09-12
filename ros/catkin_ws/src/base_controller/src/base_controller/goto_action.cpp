@@ -8,7 +8,8 @@ GotoAction::GotoAction()
     : tfListener(tfBuffer),
       loopRate(LOOP_RATE),
       distanceThreshold(0.01),
-      rotationThreshold(0.05)
+      rotationThreshold(0.05),
+      semaphore("goto_action")
 {
     double loopPeriod = 1. / LOOP_RATE;
 
@@ -27,6 +28,10 @@ GotoAction::GotoAction()
 
     cmdVelPub = nh.advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
 
+    resetPosition();
+}
+
+void GotoAction::resetPosition() {
     robotFrame = "base_footprint";
     targetFrame = "odom";
     goalPoint = tf2::Vector3(1.2, 0.17, 0);
@@ -57,40 +62,64 @@ void GotoAction::resetControllers()
     resetCmdVel();
 }
 
-void GotoAction::setRobotFrame(std_msgs::String robotFrameMsg)
-{
-    robotFrame = robotFrameMsg.data;
+void GotoAction::disable() {
+    enabled = false;
 }
 
-void GotoAction::setTargetFrame(std_msgs::String targetFrameMsg)
+void GotoAction::enable() {
+    enabled = true;
+}
+
+void GotoAction::setRobotFrame(std::string robotFrameMsg)
 {
-    targetFrame = targetFrameMsg.data;
+    robotFrame = robotFrameMsg;
+}
+
+void GotoAction::setTargetFrame(std::string targetFrameMsg)
+{
+    targetFrame = targetFrameMsg;
 }
 
 void GotoAction::setGoalPoint(geometry_msgs::Point pointMsg)
 {
+    semaphore.lock();
     tf2::fromMsg(pointMsg, goalPoint);
     hasReachedTranslationGoal = false;
+    semaphore.unlock();
 }
 
 void GotoAction::setDistanceThreshold(double distanceThreshold) {
+    semaphore.lock();
     this->distanceThreshold = distanceThreshold;
+    hasReachedTranslationGoal = false;
+    semaphore.unlock();
 }
 
 void GotoAction::setGoalRotation(geometry_msgs::Quaternion angleMsg)
 {
+    semaphore.lock();
     tf2::fromMsg(angleMsg, goalRotation);
     hasReachedRotationGoal = false;
+    semaphore.unlock();
 }
 
 void GotoAction::setRotationThreshold(double rotationThreshold) {
+    semaphore.lock();
     this->rotationThreshold = rotationThreshold;
+    hasReachedRotationGoal = false;
+    semaphore.unlock();
 }
 
 void GotoAction::publishNextCmdVel()
 {
-    updateCmdVel();
-    publishCmdVel();
+    semaphore.lock();
+    if (enabled) {
+        updateCmdVel();
+        publishCmdVel();
+    } else {
+        stopRobot();
+    }
+    semaphore.unlock();
 }
 
 void GotoAction::updateCmdVel() {

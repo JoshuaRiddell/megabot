@@ -2,10 +2,8 @@
 #include <algorithm>
 #include <math.h>
 
-#include <ros/ros.h>
-
 SpeedCurve::SpeedCurve()
-    : acceleration(0.1), distanceCoefficient(0.1), distanceDeadband(0.01), minSpeed(0.1), maxSpeed(0.5), loopPeriod(0.1), currentSpeed(0), targetSpeed(0)
+    : acceleration(0.1), distanceCoefficient(0.1), distanceDeadband(0.01), minSpeed(0.1), maxSpeed(0.5), loopPeriod(0.1)
 {
     reset();
 }
@@ -13,6 +11,8 @@ SpeedCurve::SpeedCurve()
 void SpeedCurve::reset()
 {
     setCurrentSpeed(0);
+    currentDistance = 0;
+    targetSpeed = 0;
 }
 
 void SpeedCurve::setAcceleration(double acceleration)

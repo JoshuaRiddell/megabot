@@ -10,7 +10,6 @@
 
 #include <dynamic_reconfigure/server.h>
 #include <base_controller/BaseControllerConfig.h>
-#include <base_controller/reset_odom_action.h>
 
 GotoAction *gotoActionPtr;
 
@@ -23,10 +22,12 @@ GotoPointAction::GotoPointAction(std::string actionName)
 void GotoPointAction::executeCallback(const base_controller::GotoPointGoalConstPtr &goal) {
     ros::Rate delay(10);
 
+    gotoActionPtr->disable();
     gotoActionPtr->setRobotFrame(goal->reference_frame);
     gotoActionPtr->setTargetFrame(goal->target_frame);
     gotoActionPtr->setGoalPoint(goal->point);
-    gotoActionPtr->setDistanceThreshold(goal->distance_threshold.data);
+    gotoActionPtr->setDistanceThreshold(goal->distance_threshold);
+    gotoActionPtr->enable();
 
     while (true) {
         if (!ros::ok() || actionServer.isPreemptRequested()) {
@@ -53,12 +54,14 @@ void GotoPoseAction::executeCallback(const base_controller::GotoPoseGoalConstPtr
 {
     ros::Rate delay(10);
 
+    gotoActionPtr->disable();
     gotoActionPtr->setRobotFrame(goal->reference_frame);
     gotoActionPtr->setTargetFrame(goal->target_frame);
     gotoActionPtr->setGoalPoint(goal->point);
     gotoActionPtr->setGoalRotation(goal->rotation);
-    gotoActionPtr->setDistanceThreshold(goal->distance_threshold.data);
-    gotoActionPtr->setRotationThreshold(goal->rotation_threshold.data);
+    gotoActionPtr->setDistanceThreshold(goal->distance_threshold);
+    gotoActionPtr->setRotationThreshold(goal->rotation_threshold);
+    gotoActionPtr->enable();
 
     while (true) {
         if (!ros::ok() || actionServer.isPreemptRequested()) {
@@ -80,6 +83,24 @@ void reconfigureCallback(base_controller::BaseControllerConfig &config, uint32_t
     gotoActionPtr->setConfig(config);
 }
 
+ResetOdomAction::ResetOdomAction(std::string actionName)
+: actionServer(nh, actionName, boost::bind(&ResetOdomAction::executeCallback, this, _1), false) {
+    actionServer.start();
+    resetOdomPub = nh.advertise<std_msgs::Empty>("reset_odom", 1, false);
+}
+
+void ResetOdomAction::executeCallback(const base_controller::ResetOdomGoalConstPtr &goal) {
+    gotoActionPtr->disable();
+    gotoActionPtr->resetPosition();
+
+    std_msgs::Empty msg;
+    resetOdomPub.publish(msg);
+    ros::Duration(0.5).sleep();
+
+    gotoActionPtr->enable();
+    actionServer.setSucceeded();
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "base_controller");
@@ -98,6 +119,7 @@ int main(int argc, char **argv)
     server.setCallback(serverCallback);
 
     gotoAction.resetControllers();
+    gotoAction.disable();
 
     while (ros::ok()) {
         ros::spinOnce();

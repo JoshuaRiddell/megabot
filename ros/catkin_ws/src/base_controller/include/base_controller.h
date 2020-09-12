@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <actionlib/server/simple_action_server.h>
 
+#include <base_controller/ResetOdomAction.h>
 #include <base_controller/GotoPointAction.h>
 #include <base_controller/GotoPoseAction.h>
 #include <base_controller/goto_action.h>
@@ -35,3 +36,15 @@ private:
     base_controller::GotoPoseResult result;
 };
 
+class ResetOdomAction {
+public:
+    ResetOdomAction(std::string actionName);
+
+private:
+    void executeCallback(const base_controller::ResetOdomGoalConstPtr &goal);
+
+    ros::NodeHandle nh;
+    actionlib::SimpleActionServer<base_controller::ResetOdomAction> actionServer;
+
+    ros::Publisher resetOdomPub;
+};
