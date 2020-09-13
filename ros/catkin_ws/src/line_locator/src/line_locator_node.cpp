@@ -76,10 +76,10 @@ cv::Point get_mean_point(cv::Mat &img, std::vector<cv::Point> coordinates) {
     xSum = ySum = 0;
 
     for (auto coordinate = coordinates.begin(); coordinate != coordinates.end(); ++coordinate) {
-        if (coordinate->y > img.rows / 10 &&
-                coordinate->y < img.rows - img.rows / 10 &&
-                coordinate->x > img.cols / 10 &&
-                coordinate->x < img.cols - img.cols / 10) {
+        if (coordinate->y > img.rows / 7 &&
+                coordinate->y < img.rows - img.rows / 2 &&
+                coordinate->x > img.cols / 7 &&
+                coordinate->x < img.cols - img.cols / 7) {
             xSum += coordinate->x;
             ySum += coordinate->y;
             ++n;
@@ -176,11 +176,17 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
         if (abs(vx) > abs(vy)) {
             // use horizontal method
             float m = vy/vx;
+            if (fabs(m) < 0.15) {
+                endpoint = cv::Point(-1, -1);
+            }
             start = cv::Point(0, (int)round(y - x*m));
             end = cv::Point(cols-1, (int)round(y + (cols-x)*m));
         } else {
             // use vertical method
             float m = vx/vy;
+            if (fabs(m) < 0.15) {
+                endpoint = cv::Point(-1, -1);
+            }
             start = cv::Point((int)round(x - y*m), 0);
             end = cv::Point((int)round(x + (rows-y)*m), rows-1);
         }
@@ -200,9 +206,15 @@ void get_line_points(std::vector<std::vector<cv::Point>> &line_points, cv::Mat &
 
             cv::Scalar white = cv::Scalar( 255, 255, 255 );
             cv::Scalar blue = cv::Scalar( 255, 0, 0 );
-            cv::drawContours(debug, contours, i, white, 2, 8);
-            cv::line(debug, start, end, white, 2, 8);
-            cv::circle(debug, endpoint, 10, blue, -1);
+            cv::Scalar red = cv::Scalar( 0, 0, 255 );
+            cv::drawContours(debug, contours, i, white, 1, 8);
+            cv::line(debug, start, end, white, 1, 8);
+            cv::circle(debug, endpoint, 6, blue, -1);
+
+            cv::circle(debug, endpointCoordinates.at(0), 3, red, -1);
+            cv::circle(debug, endpointCoordinates.at(1), 3, red, -1);
+            cv::circle(debug, endpointCoordinates.at(2), 3, red, -1);
+            cv::circle(debug, endpointCoordinates.at(3), 3, red, -1);
         }
     }
 }
