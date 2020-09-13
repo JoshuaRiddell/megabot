@@ -16,11 +16,16 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
   message_generation
   message_runtime
+  dynamic_reconfigure
 )
 
 add_service_files(
   FILES
   SetPosition.srv
+)
+
+generate_dynamic_reconfigure_options(
+  cfg/Localisation.cfg
 )
 
 generate_messages(
@@ -40,7 +45,11 @@ include_directories(
 )
 
 add_executable(${PROJECT_NAME}_node src/localisation_node.cpp)
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${PROJECT_NAME}_generate_messages_cpp)
+add_dependencies(${PROJECT_NAME}_node 
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${catkin_EXPORTED_TARGETS}
+  ${PROJECT_NAME}_generate_messages_cpp
+  ${PROJECT_NAME}_gencfg)
 
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}

@@ -8,15 +8,17 @@
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <localisation/SetPosition.h>
+#include <dynamic_reconfigure/server.h>
+#include <localisation/LocalisationConfig.h>
 
 #include <tf2_ros/transform_broadcaster.h>
 
+localisation::LocalisationConfig currentConfig;
 tf2_ros::Buffer tfBuffer;
 tf2_ros::TransformBroadcaster *transformBroadcasterPtr;
 std::vector<tf2::Quaternion> mapLineAngles;
 std::vector<tf2::Vector3> mapLineEnds;
 tf2::Transform mapToOdom;
-double movingAverageConstant = 0.5;
 geometry_msgs::Twist currentVelocity;
 
 tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::Time time);
@@ -38,11 +40,11 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     tf2::Vector3 translationVelocity;
     translationVelocity.setX(currentVelocity.linear.x);
     translationVelocity.setY(currentVelocity.linear.y);
-    if (translationVelocity.length() > 0.1) {
+    if (translationVelocity.length() > currentConfig.max_translation_velocity) {
         ROS_INFO("translation speed too high");
         return;
     }
-    if (fabs(currentVelocity.angular.z) > 0.1) {
+    if (fabs(currentVelocity.angular.z) > currentConfig.max_rotation_velocity) {
         ROS_INFO("angular speed too high");
         return;
     }
@@ -53,7 +55,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     tf2::convert(msg.pose.orientation, measuredRotation);
     tf2::convert(msg.pose.position, measuredEndpoint);
 
-    double matchedThreshold = 0.5;
+    double matchedThreshold = currentConfig.matched_distance_threshold;
 
     int matchedIndex = -1;
     for (int i = 0; i < mapLineEnds.size(); ++i) {
@@ -70,7 +72,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
         return;
     }
 
-    double matchedAngleThreshold = 1.0;
+    double matchedAngleThreshold = currentConfig.matched_angle_threshold_deg;
     tf2::Vector3 matchedOrigin = mapLineEnds.at(matchedIndex);
     tf2::Quaternion matchedRotation = mapLineAngles.at(matchedIndex);
 
@@ -89,7 +91,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
         return;
     }
 
-    double c = movingAverageConstant;
+    double c = currentConfig.moving_average_constant;
     double invC = 1 - c;
 
     tf2::Quaternion endpointTargetRotation = measuredRotation.slerp(matchedRotation, c);
@@ -126,26 +128,17 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     // pubTransform("map", "test_odom", msg.header.stamp, mapToOdom);
 }
 
+void clearLines() {
+    mapLineEnds.clear();
+    mapLineAngles.clear();
+}
+
 void addLine(double x, double y, double angle) {
     tf2::Quaternion qTmp;
     mapLineEnds.push_back(tf2::Vector3(x, y, 0));
 
     qTmp.setRPY(0, 0, angle);
     mapLineAngles.push_back(qTmp);
-}
-
-void loadMapLines() {
-    // single vertical
-    // addLine(1.2, 0, M_PI/2);
-    // addLine(1.2, 1.2, M_PI/2);
-
-    // left diagonal
-    addLine(0.7, 1.2, 2.02);
-    // addLine(0.16, 2.143, 2.094);
-
-    // right diagonal
-    // addLine(2.24, 2.143, 1.0472);
-    // addLine(1.69, 1.2, 1.0472);
 }
 
 bool setLocationCallback(localisation::SetPosition::Request &request,
@@ -178,9 +171,21 @@ tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::T
     return requestTransform;
 }
 
+void reconfigureCallback(localisation::LocalisationConfig &config, uint32_t level) {
+    currentConfig = config;
+
+    clearLines();
+    addLine(config.line_x, config.line_y, config.line_angle_deg);
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "localisation");
+
+    dynamic_reconfigure::Server<localisation::LocalisationConfig> server;
+    dynamic_reconfigure::Server<localisation::LocalisationConfig>::CallbackType serverCallback;
+    serverCallback = boost::bind(&reconfigureCallback, _1, _2);
+    server.setCallback(serverCallback);
 
     tf2_ros::TransformBroadcaster transformBroadcaster;
     transformBroadcasterPtr = &transformBroadcaster;
@@ -198,8 +203,6 @@ int main(int argc, char **argv)
     transformStamped.header.frame_id = "map";
     transformStamped.child_frame_id = "odom";
 
-    loadMapLines();
-    
     tf2::Quaternion q;
     q.setRPY(0, 0, 0);
     mapToOdom.setOrigin(tf2::Vector3(0, 0, 0));
