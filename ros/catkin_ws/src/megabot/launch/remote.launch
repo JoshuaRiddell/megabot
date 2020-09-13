@@ -25,8 +25,8 @@
             <param name="io_method" value="mmap"/>
             <param name="framerate" value="10"/>
             <param name="autoexposure" value="false"/>
-            <!-- <param name="exposure" value="40"/> -->
-            <param name="exposure" value="1500"/>
+            <param name="exposure" value="2500"/>
+            <!-- <param name="exposure" value="2000"/> -->
         </node>
         <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" machine="pi" />
 

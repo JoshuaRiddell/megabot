@@ -33,13 +33,13 @@ base_controller:
   angle_speed_curve_acceleration: 2.0
   angle_speed_curve_distance_coefficient: 0.6
   angle_speed_curve_distance_deadband: 0.01
-  angle_speed_curve_max_speed: 0.792
+  angle_speed_curve_max_speed: 0.396
   angle_speed_curve_min_speed: 0.05
-  translation_acceleration_limiter_max_acceleration: 3.0
-  translation_speed_curve_acceleration: 0.5
+  translation_acceleration_limiter_max_acceleration: 4.998
+  translation_speed_curve_acceleration: 0.931
   translation_speed_curve_distance_coefficient: 0.3
   translation_speed_curve_distance_deadband: 0.01
-  translation_speed_curve_max_speed: 2.107
+  translation_speed_curve_max_speed: 0.1
   translation_speed_curve_min_speed: 0.05
 camera:
   autoexposure: false
@@ -47,7 +47,7 @@ camera:
   camera_name: camera
   debayer:
     debayer: 0
-  exposure: 1500
+  exposure: 2500
   framerate: 10
   gain: 0
   image_color:
@@ -147,7 +147,7 @@ description: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- =================
   0.0\" iyy=\"50.0\" iyz=\"0.0\" izz=\"50.0\"/>\n    </inertial>\n    <visual>\n \
   \     <geometry>\n        <sphere radius=\"0.033\"/>\n      </geometry>\n    </visual>\n\
   \  </link>\n  <joint name=\"right_grabber_joint\" type=\"fixed\">\n    <origin rpy=\"\
-  0 0 0\" xyz=\"0.231 -0.039 0.03\"/>\n    <parent link=\"base_footprint\"/>\n   \
+  0 0 0\" xyz=\"0.231 -0.059 0.03\"/>\n    <parent link=\"base_footprint\"/>\n   \
   \ <child link=\"right_grabber\"/>\n  </joint>\n  <link name=\"right_grabber_stage\"\
   >\n    <inertial>\n      <mass value=\"50\"/>\n      <origin xyz=\"0 0 0\"/>\n \
   \     <inertia ixx=\"50.0\" ixy=\"0.0\" ixz=\"0.0\" iyy=\"50.0\" iyz=\"0.0\" izz=\"\
@@ -160,7 +160,7 @@ description: "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<!-- =================
   \ iyy=\"50.0\" iyz=\"0.0\" izz=\"50.0\"/>\n    </inertial>\n    <visual>\n     \
   \ <geometry>\n        <sphere radius=\"0.033\"/>\n      </geometry>\n    </visual>\n\
   \  </link>\n  <joint name=\"left_grabber_joint\" type=\"fixed\">\n    <origin rpy=\"\
-  0 0 0\" xyz=\"0.231 0.039 0.03\"/>\n    <parent link=\"base_footprint\"/>\n    <child\
+  0 0 0\" xyz=\"0.231 0.059 0.03\"/>\n    <parent link=\"base_footprint\"/>\n    <child\
   \ link=\"left_grabber\"/>\n  </joint>\n  <link name=\"left_grabber_stage\">\n  \
   \  <inertial>\n      <mass value=\"50\"/>\n      <origin xyz=\"0 0 0\"/>\n     \
   \ <inertia ixx=\"50.0\" ixy=\"0.0\" ixz=\"0.0\" iyy=\"50.0\" iyz=\"0.0\" izz=\"\
@@ -370,15 +370,15 @@ line:
       target_bitrate: 800000
 line_locator:
   area_high: 6000.0
-  area_low: 1000.0
+  area_low: 600.0
   circularity_high: 1.0
   circularity_low: 0.0
   h_high: 255
   h_low: 0
-  s_high: 32
+  s_high: 178
   s_low: 0
   v_high: 255
-  v_low: 122
+  v_low: 76
 magnetic:
   drift: 0.0
   drift_frequency: 0.0
