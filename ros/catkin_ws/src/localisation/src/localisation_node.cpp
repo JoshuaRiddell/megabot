@@ -20,14 +20,6 @@ double movingAverageConstant = 0.5;
 
 tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::Time time);
 
-void logVector(std::string message, tf2::Vector3 vector) {
-    ROS_INFO("%s: %f %f %f", message.c_str(), vector.getX(), vector.getY(), vector.getZ());
-}
-
-void logAngle(std::string message, tf2::Quaternion angle) {
-    ROS_INFO("%s: %f", message.c_str(), angle.getAngle());
-}
-
 void pubTransform(std::string from, std::string to, ros::Time stamp, tf2::Transform transform) {
     geometry_msgs::TransformStamped tfMsg;
     tfMsg.header.stamp = stamp;
@@ -92,42 +84,29 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     endpointTargetTransform.setOrigin(endpointTargetOrigin);
     endpointTargetTransform.setRotation(endpointTargetRotation);
 
-    pubTransform("map", "endpoint_target", msg.header.stamp, endpointTargetTransform);
-
     tf2::Transform measuredEndpointTransform;
     measuredEndpointTransform.setOrigin(measuredEndpoint);
     measuredEndpointTransform.setRotation(measuredRotation);
+
+    tf2::Transform odomFootprintTransform = getTransform("odom", "base_footprint", msg.header.stamp);
     tf2::Transform mapFootprintTransform = getTransform("map", "base_footprint", msg.header.stamp);
     tf2::Transform footprintEndpointTransform = mapFootprintTransform.inverseTimes(measuredEndpointTransform);
-    tf2::Transform odomFootprintTransform = getTransform("odom", "base_footprint", msg.header.stamp);
-
-    pubTransform("map", "measured", msg.header.stamp, measuredEndpointTransform);
+    tf2::Transform newFootprint = endpointTargetTransform * footprintEndpointTransform.inverse();
+    mapToOdom = newFootprint * odomFootprintTransform.inverse();
 
     tf2::Transform matchedTransform;
     matchedTransform.setRotation(matchedRotation);
     matchedTransform.setOrigin(matchedOrigin);
     pubTransform("map", "matched", msg.header.stamp, matchedTransform);
 
-    pubTransform("map", "footprint", msg.header.stamp, mapFootprintTransform);
-    pubTransform("base_footprint", "test_endpoint", msg.header.stamp, footprintEndpointTransform);
-    pubTransform("test_odom", "test_footprint", msg.header.stamp, odomFootprintTransform);
-
-    tf2::Transform odomEndpointTransform = odomFootprintTransform * footprintEndpointTransform;
-    // tf2::Transform measureRotation = measuredEndpointTransform;
-    // measureRotation.setOrigin(tf2::Vector3(0,0,0));
-    // newMapToOdom.setOrigin(measureRotation * newMapToOdom.getOrigin());
-    pubTransform("odom", "odom_endpoint", msg.header.stamp, odomEndpointTransform);
+    // pubTransform("map", "measured", msg.header.stamp, measuredEndpointTransform);
+    // pubTransform("map", "endpoint_target", msg.header.stamp, endpointTargetTransform);
+    // pubTransform("map", "new_footprint", msg.header.stamp, newFootprint);
+    // pubTransform("endpoint_target", "new_footprint2", msg.header.stamp, footprintEndpointTransform.inverse());
+    // pubTransform("map", "footprint", msg.header.stamp, mapFootprintTransform);
     // pubTransform("base_footprint", "test_endpoint", msg.header.stamp, footprintEndpointTransform);
-
-    tf2::Transform newFootprint = endpointTargetTransform * footprintEndpointTransform.inverse();
-
-    pubTransform("map", "new_footprint", msg.header.stamp, newFootprint);
-    pubTransform("endpoint_target", "new_footprint2", msg.header.stamp, footprintEndpointTransform.inverse());
-
-    tf2::Transform newMapToOdom = newFootprint * odomFootprintTransform.inverse();
-    pubTransform("map", "test_odom", msg.header.stamp, newMapToOdom);
-
-    mapToOdom = newMapToOdom;
+    // pubTransform("test_odom", "test_footprint", msg.header.stamp, odomFootprintTransform);
+    // pubTransform("map", "test_odom", msg.header.stamp, mapToOdom);
 }
 
 void addLine(double x, double y, double angle) {
