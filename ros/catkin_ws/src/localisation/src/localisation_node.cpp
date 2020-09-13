@@ -4,17 +4,38 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2_ros/transform_listener.h>
+#include <tf2/utils.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <geometry_msgs/Twist.h>
 #include <localisation/SetPosition.h>
 
+#include <tf2_ros/transform_broadcaster.h>
+
 tf2_ros::Buffer tfBuffer;
+tf2_ros::TransformBroadcaster *transformBroadcasterPtr;
 std::vector<tf2::Quaternion> mapLineAngles;
 std::vector<tf2::Vector3> mapLineEnds;
 tf2::Transform mapToOdom;
-double movingAverageConstant = 0.2;
+double movingAverageConstant = 0.5;
 
-tf2::Transform getTransform(std::string startFrame, std::string endFrame);
+tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::Time time);
+
+void logVector(std::string message, tf2::Vector3 vector) {
+    ROS_INFO("%s: %f %f %f", message.c_str(), vector.getX(), vector.getY(), vector.getZ());
+}
+
+void logAngle(std::string message, tf2::Quaternion angle) {
+    ROS_INFO("%s: %f", message.c_str(), angle.getAngle());
+}
+
+void pubTransform(std::string from, std::string to, ros::Time stamp, tf2::Transform transform) {
+    geometry_msgs::TransformStamped tfMsg;
+    tfMsg.header.stamp = stamp;
+    tfMsg.header.frame_id = from;
+    tfMsg.child_frame_id = to;
+    tfMsg.transform = tf2::toMsg(transform);
+    transformBroadcasterPtr->sendTransform(tfMsg);
+}
 
 void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     tf2::Quaternion measuredRotation;
@@ -23,7 +44,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     tf2::convert(msg.pose.orientation, measuredRotation);
     tf2::convert(msg.pose.position, measuredEndpoint);
 
-    double matchedThreshold = 0.3;
+    double matchedThreshold = 0.5;
 
     int matchedIndex = -1;
     for (int i = 0; i < mapLineEnds.size(); ++i) {
@@ -40,7 +61,8 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
         return;
     }
 
-    double matchedAngleThreshold = 0.26;
+    double matchedAngleThreshold = 1.0;
+    tf2::Vector3 matchedOrigin = mapLineEnds.at(matchedIndex);
     tf2::Quaternion matchedRotation = mapLineAngles.at(matchedIndex);
 
     if (matchedRotation.angleShortestPath(measuredRotation) > M_PI_2) {
@@ -54,29 +76,58 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
     ROS_INFO("%f", angleDifference.getAngle());
 
     if (angleDifference.getAngle() > matchedAngleThreshold) {
+        ROS_INFO("angle filtered");
         return;
     }
 
-    tf2::Vector3 correctionOrigin = mapLineEnds.at(matchedIndex) - measuredEndpoint;
-    tf2::Quaternion correctionRotation = angleDifference;
-    
-    tf2::Vector3 currentOrigin = mapToOdom.getOrigin();
-    tf2::Quaternion currentRotation = mapToOdom.getRotation();
-
     double c = movingAverageConstant;
-    double invC = 1-c;
+    double invC = 1 - c;
 
-    currentOrigin.setX(correctionOrigin.x() * c + invC * currentOrigin.x());
-    currentOrigin.setY(correctionOrigin.y() * c + invC * currentOrigin.y());
-    currentOrigin.setZ(correctionOrigin.z() * c + invC * currentOrigin.z());
-    
-    double currentYaw = currentRotation.getAngle();
-    double correctionYaw = correctionRotation.getAngle();
-    currentYaw = correctionYaw * c + invC * currentYaw;
-    currentRotation.setRPY(0, 0, currentYaw);
+    tf2::Quaternion endpointTargetRotation = measuredRotation.slerp(matchedRotation, c);
+    tf2::Vector3 endpointTargetOrigin;
+    endpointTargetOrigin.setX(measuredEndpoint.x()*c + matchedOrigin.x()*invC);
+    endpointTargetOrigin.setY(measuredEndpoint.y()*c + matchedOrigin.y()*invC);
+    endpointTargetOrigin.setZ(measuredEndpoint.z()*c + matchedOrigin.z()*invC);
+    tf2::Transform endpointTargetTransform;
+    endpointTargetTransform.setOrigin(endpointTargetOrigin);
+    endpointTargetTransform.setRotation(endpointTargetRotation);
 
-    mapToOdom.setOrigin(currentOrigin);
-    mapToOdom.setRotation(currentRotation);
+    pubTransform("map", "endpoint_target", msg.header.stamp, endpointTargetTransform);
+
+    tf2::Transform measuredEndpointTransform;
+    measuredEndpointTransform.setOrigin(measuredEndpoint);
+    measuredEndpointTransform.setRotation(measuredRotation);
+    tf2::Transform mapFootprintTransform = getTransform("map", "base_footprint", msg.header.stamp);
+    tf2::Transform footprintEndpointTransform = mapFootprintTransform.inverseTimes(measuredEndpointTransform);
+    tf2::Transform odomFootprintTransform = getTransform("odom", "base_footprint", msg.header.stamp);
+
+    pubTransform("map", "measured", msg.header.stamp, measuredEndpointTransform);
+
+    tf2::Transform matchedTransform;
+    matchedTransform.setRotation(matchedRotation);
+    matchedTransform.setOrigin(matchedOrigin);
+    pubTransform("map", "matched", msg.header.stamp, matchedTransform);
+
+    pubTransform("map", "footprint", msg.header.stamp, mapFootprintTransform);
+    pubTransform("base_footprint", "test_endpoint", msg.header.stamp, footprintEndpointTransform);
+    pubTransform("test_odom", "test_footprint", msg.header.stamp, odomFootprintTransform);
+
+    tf2::Transform odomEndpointTransform = odomFootprintTransform * footprintEndpointTransform;
+    // tf2::Transform measureRotation = measuredEndpointTransform;
+    // measureRotation.setOrigin(tf2::Vector3(0,0,0));
+    // newMapToOdom.setOrigin(measureRotation * newMapToOdom.getOrigin());
+    pubTransform("odom", "odom_endpoint", msg.header.stamp, odomEndpointTransform);
+    // pubTransform("base_footprint", "test_endpoint", msg.header.stamp, footprintEndpointTransform);
+
+    tf2::Transform newFootprint = endpointTargetTransform * footprintEndpointTransform.inverse();
+
+    pubTransform("map", "new_footprint", msg.header.stamp, newFootprint);
+    pubTransform("endpoint_target", "new_footprint2", msg.header.stamp, footprintEndpointTransform.inverse());
+
+    tf2::Transform newMapToOdom = newFootprint * odomFootprintTransform.inverse();
+    pubTransform("map", "test_odom", msg.header.stamp, newMapToOdom);
+
+    mapToOdom = newMapToOdom;
 }
 
 void addLine(double x, double y, double angle) {
@@ -113,17 +164,17 @@ bool setLocationCallback(localisation::SetPosition::Request &request,
     requestedTransform.setOrigin(requestedPosition);
     requestedTransform.setRotation(requestedRotation);
 
-    tf2::Transform currentTransform = getTransform("odom", "base_footprint");
+    tf2::Transform currentTransform = getTransform("odom", "base_footprint", ros::Time::now());
 
     mapToOdom = requestedTransform * currentTransform.inverse();
 
     return true;
 }
 
-tf2::Transform getTransform(std::string startFrame, std::string endFrame)
+tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::Time time)
 {
     geometry_msgs::TransformStamped requestTransformStamped;
-    requestTransformStamped = tfBuffer.lookupTransform(startFrame, endFrame, ros::Time::now(), ros::Duration(1.0));
+    requestTransformStamped = tfBuffer.lookupTransform(startFrame, endFrame, time, ros::Duration(1.0));
 
     tf2::Transform requestTransform;
     tf2::fromMsg(requestTransformStamped.transform, requestTransform);
@@ -135,10 +186,12 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "localisation");
 
+    tf2_ros::TransformBroadcaster transformBroadcaster;
+    transformBroadcasterPtr = &transformBroadcaster;
+
     ros::NodeHandle nh;
     ros::Rate r(10);
 
-    tf2_ros::TransformBroadcaster transformBroadcaster;
     tf2_ros::TransformListener tfListener(tfBuffer);
 
     ros::ServiceServer setPositionService = nh.advertiseService("set_location", setLocationCallback);
