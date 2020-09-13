@@ -17,6 +17,7 @@ std::vector<tf2::Quaternion> mapLineAngles;
 std::vector<tf2::Vector3> mapLineEnds;
 tf2::Transform mapToOdom;
 double movingAverageConstant = 0.5;
+geometry_msgs::Twist currentVelocity;
 
 tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::Time time);
 
@@ -29,7 +30,23 @@ void pubTransform(std::string from, std::string to, ros::Time stamp, tf2::Transf
     transformBroadcasterPtr->sendTransform(tfMsg);
 }
 
+void currentVelocityCallback(const geometry_msgs::Twist &msg) {
+    currentVelocity = msg;
+}
+
 void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
+    tf2::Vector3 translationVelocity;
+    translationVelocity.setX(currentVelocity.linear.x);
+    translationVelocity.setY(currentVelocity.linear.y);
+    if (translationVelocity.length() > 0.1) {
+        ROS_INFO("translation speed too high");
+        return;
+    }
+    if (fabs(currentVelocity.angular.z) > 0.1) {
+        ROS_INFO("angular speed too high");
+        return;
+    }
+
     tf2::Quaternion measuredRotation;
     tf2::Vector3 measuredEndpoint;
 
@@ -175,6 +192,7 @@ int main(int argc, char **argv)
 
     ros::ServiceServer setPositionService = nh.advertiseService("set_location", setLocationCallback);
     ros::Subscriber line_sub = nh.subscribe("line_endpoint", 1, lineEndpointCallback);
+    ros::Subscriber currentVelocitySub = nh.subscribe("cmd_vel", 1, currentVelocityCallback);
 
     geometry_msgs::TransformStamped transformStamped;
     transformStamped.header.frame_id = "map";
