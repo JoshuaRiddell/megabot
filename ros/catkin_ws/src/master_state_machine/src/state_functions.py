@@ -7,13 +7,15 @@ from lifter_controller.msg import GrabAction, GrabGoal, LiftAction, LiftGoal
 from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Point, Quaternion
 from ball_mapper.srv import ClosestBall, ClosestBallRequest
+from localisation.srv import SetPosition, SetPositionRequest
 from smach_ros import ServiceState
 
 def build_reset_state():
     sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("RESET_ODOM", reset_odom(), {"succeeded": "OPEN_LEFT"})
+        StateMachine.add("RESET_ODOM", reset_odom(), {"succeeded": "RESET_LOCALISATION"})
+        StateMachine.add("RESET_LOCALISATION", reset_localisation(), {"succeeded": "OPEN_LEFT"})
         StateMachine.add("OPEN_LEFT", release("left_grabber"), {"succeeded": "OPEN_RIGHT"})
         StateMachine.add("OPEN_RIGHT", release("right_grabber"), {"succeeded": "LOWER_LIFTER"})
         StateMachine.add("LOWER_LIFTER", lower(), {"succeeded": "succeeded"})
@@ -130,6 +132,15 @@ def lower():
 
 def reset_odom():
     return SimpleActionState('reset_odom', ResetOdomAction)
+
+def reset_localisation():
+    request = SetPositionRequest()
+    request.frame = "map"
+    request.position = Point(1.2, 0.2, 0)
+    quat = quaternion_from_euler(0, 0, numpy.radians(90))
+    request.rotation = Quaternion(*quat)
+
+    return ServiceState('localisation/set_location', SetPosition, request=request)
 
 def closest_ball(grabber_frame, distance_limit):
     return ServiceState('ball_map/closest', ClosestBall,
