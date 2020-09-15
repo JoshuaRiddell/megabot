@@ -72,7 +72,7 @@ def build_pickup_state(grabber_frame, distance_limit):
         def drive_ball_goal_cb(userdata, goal, frame, distance_threshold):
             goto_goal = GotoPointGoal()
             goto_goal.point = userdata.ball_location
-            goto_goal.target_frame = "odom"
+            goto_goal.target_frame = "map"
             goto_goal.reference_frame = data=frame
             goto_goal.distance_threshold = distance_threshold
             return goto_goal

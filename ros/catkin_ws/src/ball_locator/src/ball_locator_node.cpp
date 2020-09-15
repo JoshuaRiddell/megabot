@@ -26,7 +26,7 @@ CoordinateTransformer coordinateTransformer;
 ros::Time currentTimestamp;
 std::string currentFrame;
 
-std::string referenceFrame = "odom";
+std::string referenceFrame = "map";
 
 void setupProjectionPlane();
 void dynamicReconfigureCallback(ball_locator::ImageAnalysisConfig &config, uint32_t level);

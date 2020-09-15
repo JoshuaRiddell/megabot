@@ -11,7 +11,7 @@
 std::list<BallTracker> ball_trackers;
 ros::Publisher ball_map_pub, ball_map_vis_pub;
 std::vector<tf2::Vector3> camera_view;
-std::string referenceFrame = "odom";
+std::string referenceFrame = "map";
 tf2_ros::Buffer tfBuffer;
 
 tf2::Vector3 getLocation(std::string startFrame, std::string endFrame);
