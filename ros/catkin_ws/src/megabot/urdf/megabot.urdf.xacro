@@ -173,7 +173,7 @@
 
   <!-- Camera parameters -->
   <xacro:property name="camera_size" value="0.03" />
-  <xacro:property name="camera_front_offset" value="0.185" />
+  <xacro:property name="camera_front_offset" value="0.165" />
   <xacro:property name="camera_height" value="0.43" />
   <xacro:property name="camera_pitch" value="1.22" />
 
