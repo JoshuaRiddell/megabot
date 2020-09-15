@@ -17,6 +17,13 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   message_runtime
   dynamic_reconfigure
+  actionlib_msgs
+  actionlib
+)
+
+add_action_files(
+  DIRECTORY action
+  FILES LineCalibration.action
 )
 
 add_service_files(
@@ -29,18 +36,18 @@ generate_dynamic_reconfigure_options(
 )
 
 generate_messages(
-  DEPENDENCIES std_msgs geometry_msgs
+  DEPENDENCIES std_msgs geometry_msgs actionlib_msgs
 )
 
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES localisation
-#  CATKIN_DEPENDS roscpp
+  CATKIN_DEPENDS roscpp actionlib_msgs
 #  DEPENDS system_lib
 )
 
 include_directories(
-  # include
+  include
   ${catkin_INCLUDE_DIRS}
 )
 

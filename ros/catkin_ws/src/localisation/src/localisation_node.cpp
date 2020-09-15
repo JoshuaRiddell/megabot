@@ -10,6 +10,7 @@
 #include <localisation/SetPosition.h>
 #include <dynamic_reconfigure/server.h>
 #include <localisation/LocalisationConfig.h>
+#include <localisation.h>
 
 #include <tf2_ros/transform_broadcaster.h>
 
@@ -20,6 +21,9 @@ std::vector<tf2::Quaternion> mapLineAngles;
 std::vector<tf2::Vector3> mapLineEnds;
 tf2::Transform mapToOdom;
 geometry_msgs::Twist currentVelocity;
+
+double currentAngleDifference;
+double currentDistance;
 
 tf2::Transform getTransform(std::string startFrame, std::string endFrame, ros::Time time);
 
@@ -63,9 +67,12 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
 
         if (distance < matchedThreshold) {
             matchedIndex = i;
+            currentDistance = distance;
             break;
         }
     }
+
+    ROS_INFO("distance diff: %f", currentDistance);
 
     if (matchedIndex < 0) {
         ROS_INFO("distance filtered");
@@ -84,7 +91,8 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
 
     tf2::Quaternion angleDifference = matchedRotation * measuredRotation.inverse();
 
-    ROS_INFO("%f", angleDifference.getAngle());
+    currentAngleDifference = angleDifference.getAngle();
+    ROS_INFO("angle diff: %f", currentAngleDifference);
 
     if (angleDifference.getAngle() > matchedAngleThreshold) {
         ROS_INFO("angle filtered");
@@ -178,6 +186,47 @@ void reconfigureCallback(localisation::LocalisationConfig &config, uint32_t leve
     addLine(config.line_x, config.line_y, config.line_angle_deg);
 }
 
+LineCalibrationAction::LineCalibrationAction(std::string actionName)
+    : actionServer(nh, actionName, boost::bind(&LineCalibrationAction::executeCallback, this, _1), false)
+{
+    actionServer.start();
+}
+
+void LineCalibrationAction::executeCallback(const localisation::LineCalibrationGoalConstPtr &goal)
+{
+    int pollFrequency = 10;
+    int timeoutMaxSec = 10;
+    int timeoutMaxN = timeoutMaxSec * pollFrequency;
+    ros::Rate delay(pollFrequency);
+    int timeoutCounter = 0;
+
+    currentDistance = INFINITY;
+    currentAngleDifference = INFINITY;
+    ros::Subscriber line_sub = nh.subscribe("line_endpoint", 1, lineEndpointCallback);
+
+    while (true) {
+        if (!ros::ok() || actionServer.isPreemptRequested()) {
+            actionServer.setPreempted();
+            break;
+        }
+
+        if (currentDistance < 0.005 && currentAngleDifference < tf2Radians(0.01)) {
+            actionServer.setSucceeded();
+            break;
+        }
+
+        if (timeoutCounter > timeoutMaxN) {
+            actionServer.setAborted();
+            break;
+        }
+
+        delay.sleep();
+        timeoutCounter++;
+    }
+
+    line_sub.shutdown();
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "localisation");
@@ -190,13 +239,14 @@ int main(int argc, char **argv)
     tf2_ros::TransformBroadcaster transformBroadcaster;
     transformBroadcasterPtr = &transformBroadcaster;
 
+    LineCalibrationAction("line_calibration");
+
     ros::NodeHandle nh;
     ros::Rate r(10);
 
     tf2_ros::TransformListener tfListener(tfBuffer);
 
     ros::ServiceServer setPositionService = nh.advertiseService("set_location", setLocationCallback);
-    ros::Subscriber line_sub = nh.subscribe("line_endpoint", 1, lineEndpointCallback);
     ros::Subscriber currentVelocitySub = nh.subscribe("cmd_vel", 1, currentVelocityCallback);
 
     geometry_msgs::TransformStamped transformStamped;
