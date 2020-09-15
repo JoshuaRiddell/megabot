@@ -18,7 +18,12 @@ def main():
         StateMachine.add("PICKUP_LEFT_BALL", build_pickup_left_ball_state(),
                                 {"succeeded": "PICKUP_MIDDLE_RIGHT_BALLS"})
         StateMachine.add("PICKUP_MIDDLE_RIGHT_BALLS", build_pickup_middle_right_balls_state(),
-                                {"succeeded": "succeeded"})
+                                {"succeeded": "TEMP_LINE_FIELD"})
+        StateMachine.add("TEMP_LINE_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DELAY"})
+        StateMachine.add("DELAY", Delay(5), {"succeeded": "HOME"})
+        StateMachine.add("HOME", drive_pose(1.2, 0.2, 90, 0.01, 1), {"succeeded": "RESET_ROBOT"})
+
+
         # StateMachine.add("PICKUP_AREA_BALLS", build_pickup_area_balls_state())
 
     introspection_server = smach_ros.IntrospectionServer('smach_server', sm, '/SM_ROOT')
@@ -45,9 +50,7 @@ def build_pickup_left_ball_state():
     with sm:
         StateMachine.add("DRIVE_START_FORWARD", drive_pose(1.2, 0.73, 133, 0.2, 15), {"succeeded": "DRIVE_LEFT_FIELD"})
         StateMachine.add("DRIVE_LEFT_FIELD", drive_pose(1.04, 0.95, 133, 0.1, 5), {"succeeded": "GRAB_BALL"})
-        StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 0.4), {"succeeded": "LINE_FRONT_FIELD"})
-        StateMachine.add("LINE_FRONT_FIELD", drive_pose(1.04, 0.95, 133, 0.1, 5), {"succeeded": "DELAY"})
-        StateMachine.add("DELAY", Delay(1), {"succeeded": "DROP_BUCKET"})
+        StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 0.4), {"succeeded": "DROP_BUCKET"})
         StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 

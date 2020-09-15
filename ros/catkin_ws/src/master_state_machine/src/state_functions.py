@@ -23,22 +23,37 @@ def build_bucket_drop_state():
     sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
-        StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_pose(0.4, 1.8, 90, 0.2, 20), {"succeeded": "DRIVE_LEFT_BUCKET"})
-        StateMachine.add("DRIVE_LEFT_BUCKET", drive_pose(0.22, 2.03, 90, 0.01, 5), {"succeeded": "OPEN_LEFT_GRABBER"})
+        StateMachine.add("LINE_FRONT_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DELAY"})
+        StateMachine.add("DELAY", Delay(10), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
+        StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_pose(0.4, 1.8, 90, 0.2, 20), {"succeeded": "LIFT_LIFTER"})
+        StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET"})
+        StateMachine.add("DRIVE_LEFT_BUCKET", drive_pose(0.17, 1.99, 90, 0.01, 5), {"succeeded": "OPEN_LEFT_GRABBER"})
         StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_TURN"})
-        StateMachine.add("DRIVE_LEFT_BUCKET_TURN", drive_pose(0.22, 2.03, 117.5, 0.01, 5), {"succeeded": "OPEN_RIGHT_GRABBER"})
+        StateMachine.add("DRIVE_LEFT_BUCKET_TURN", drive_pose(0.17, 1.99, 117.5, 0.01, 5), {"succeeded": "OPEN_RIGHT_GRABBER"})
         StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "LINE_FIELD"})
         StateMachine.add("LINE_FIELD", drive_pose(0.7, 1.6, -90, 0.2, 10), {"succeeded": "LOWER_LIFTER"})
         StateMachine.add("LOWER_LIFTER", lower())
     return sm
 
-def build_ball_timeout_state(grabber_frame, ball_timeout):
-    sm = Concurrence(outcomes=["succeeded", "preempted", "aborted"])
+def build_ball_timeout_state(grabber_frame, distance_limit, timeout):
+    sm = Concurrence(outcomes=["succeeded", "timed_out"],
+                    default_outcome="timed_out",
+                    output_keys=["ball_location"],
+                    outcome_map={"succeeded":{"CLOSEST_BALL": "succeeded"}})
 
     with sm:
-        Concurrence.add("CLOSEST_BALL", closest_ball(grabber_frame, ball_timeout))
-        Concurrence.add("TIMEOUT", Delay(3))
+        Concurrence.add("CLOSEST_BALL", "",
+                        remapping={"position": "ball_location"})
+        Concurrence.add("TIMEOUT", Delay(timeout))
+    return sm
+
+def build_ball_retry_state(grabber_frame, distance_limit):
+    sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"],
+                        output_keys=["ball_location"])
+    with sm:
+        StateMachine.add("DETECT_CLOSEST_BALL", closest_ball(grabber_frame, distance_limit),
+            {"succeeded": "succeeded", "aborted": "DETECT_CLOSEST_BALL"},
+            remapping={"position": "ball_location"})
     return sm
 
 class Delay(State):
@@ -62,11 +77,8 @@ def build_pickup_state(grabber_frame, distance_limit):
             goto_goal.distance_threshold = distance_threshold
             return goto_goal
 
-        StateMachine.add("DETECT_CLOSEST_BALL", ServiceState('ball_map/closest', ClosestBall,
-                request=ClosestBallRequest(grabber_frame=grabber_frame, distance_limit=distance_limit),
-                response_slots=["position"]),
-                {"succeeded": "DRIVE_BALL_STAGE", "aborted": "DETECT_CLOSEST_BALL"},
-                remapping={"position": "ball_location"})
+        StateMachine.add("DETECT_CLOSEST_BALL", build_ball_retry_state(grabber_frame, distance_limit),
+                {"succeeded": "DRIVE_BALL_STAGE"})
         StateMachine.add("DRIVE_BALL_STAGE", SimpleActionState('goto_point', GotoPointAction,
                 goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame + "_stage", 0.03),
                 input_keys=["ball_location"]),
@@ -120,6 +132,6 @@ def reset_odom():
     return SimpleActionState('reset_odom', ResetOdomAction)
 
 def closest_ball(grabber_frame, distance_limit):
-    ServiceState('ball_map/closest', ClosestBall,
+    return ServiceState('ball_map/closest', ClosestBall,
             request=ClosestBallRequest(grabber_frame=grabber_frame, distance_limit=distance_limit),
             response_slots=["position"])

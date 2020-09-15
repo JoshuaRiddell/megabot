@@ -42,7 +42,7 @@
         <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" machine="pi"/>
 
         <node pkg="line_locator" type="line_locator_node" name="line_locator" machine="pi"/>
-        <node pkg="localisation" type="localisation_node" name="localisation" machine="pi"/>
+        <!-- <node pkg="localisation" type="localisation_node" name="localisation" machine="pi"/> -->
 
         <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" >
             <remap from="robot_description" to="description" />
