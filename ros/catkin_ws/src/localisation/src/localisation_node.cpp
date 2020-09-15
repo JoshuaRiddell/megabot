@@ -72,7 +72,7 @@ void lineEndpointCallback(const geometry_msgs::PoseStamped &msg) {
         return;
     }
 
-    double matchedAngleThreshold = currentConfig.matched_angle_threshold_deg;
+    double matchedAngleThreshold = tf2Radians(currentConfig.matched_angle_threshold_deg);
     tf2::Vector3 matchedOrigin = mapLineEnds.at(matchedIndex);
     tf2::Quaternion matchedRotation = mapLineAngles.at(matchedIndex);
 
@@ -133,11 +133,11 @@ void clearLines() {
     mapLineAngles.clear();
 }
 
-void addLine(double x, double y, double angle) {
+void addLine(double x, double y, double angleDeg) {
     tf2::Quaternion qTmp;
     mapLineEnds.push_back(tf2::Vector3(x, y, 0));
 
-    qTmp.setRPY(0, 0, angle);
+    qTmp.setRPY(0, 0, tf2Radians(angleDeg));
     mapLineAngles.push_back(qTmp);
 }
 
