@@ -15,6 +15,7 @@ Servo leftGripper;
 Servo rightGripper;
 
 #define LOOP_DELAY_TIME 10
+#define ONE_HZ_DECIMATION (1000/LOOP_DELAY_TIME)
 
 #define LEFT_GRIPPER_PIN 9
 #define LEFT_GRIPPER_START 90
@@ -91,17 +92,7 @@ void toggleStep() {
       digitalWrite(STEPPER_STEP_PIN, !digitalRead(STEPPER_STEP_PIN));
       delayMicroseconds(stepDelay);
     }
-
-    if (stepperStatusMsg.data != STEPPER_MOVING) {
-      stepperStatusMsg.data = STEPPER_MOVING;
-      stepperStatusPub.publish(&stepperStatusMsg);
-    }
   } else {
-    if (stepperStatusMsg.data != currentStepperDirection) {
-      stepperStatusMsg.data = currentStepperDirection;
-      stepperStatusPub.publish(&stepperStatusMsg);
-    }
-
     delay(LOOP_DELAY_TIME);
   }
 }
@@ -146,7 +137,24 @@ void setupLcd() {
   nh.subscribe(displaySub);
 }
 
+void publishStepperStatus() {
+  if (digitalRead(currentStepperEndPin)) {
+      stepperStatusMsg.data = currentStepperDirection;
+      stepperStatusPub.publish(&stepperStatusMsg);
+  } else {
+      stepperStatusMsg.data = STEPPER_MOVING;
+      stepperStatusPub.publish(&stepperStatusMsg);
+  }
+}
+
+uint32_t loopCounter = 0;
 void loop() {
   nh.spinOnce();
   toggleStep();
+
+  if (loopCounter % ONE_HZ_DECIMATION) {
+    publishStepperStatus();
+  }
+
+  loopCounter++;
 }
