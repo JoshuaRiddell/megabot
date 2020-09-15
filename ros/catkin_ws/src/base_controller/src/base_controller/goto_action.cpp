@@ -34,7 +34,7 @@ GotoAction::GotoAction()
 void GotoAction::resetPosition() {
     robotFrame = "base_footprint";
     targetFrame = "odom";
-    goalPoint = tf2::Vector3(1.2, 0.17, 0);
+    goalPoint = tf2::Vector3(1.2, 0.2, 0);
     goalRotation.setEuler(0, 0, M_PI_2);
 }
 
