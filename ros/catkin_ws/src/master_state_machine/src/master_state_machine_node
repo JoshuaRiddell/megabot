@@ -18,13 +18,13 @@ def main():
         StateMachine.add("PICKUP_LEFT_BALL", build_pickup_left_ball_state(),
                                 {"succeeded": "PICKUP_MIDDLE_RIGHT_BALLS"})
         StateMachine.add("PICKUP_MIDDLE_RIGHT_BALLS", build_pickup_middle_right_balls_state(),
-                                {"succeeded": "TEMP_LINE_FIELD"})
-        StateMachine.add("TEMP_LINE_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DELAY"})
-        StateMachine.add("DELAY", Delay(5), {"succeeded": "HOME"})
-        StateMachine.add("HOME", drive_pose(1.2, 0.2, 90, 0.01, 1), {"succeeded": "RESET_ROBOT"})
+                                {"succeeded": "PICKUP_AREA_BALLS"})
+        StateMachine.add("PICKUP_AREA_BALLS", build_pickup_area_balls_state(),
+                                {"succeeded": "PICKUP_AREA_BALLS"})
 
-
-        # StateMachine.add("PICKUP_AREA_BALLS", build_pickup_area_balls_state())
+        # StateMachine.add("TEMP_LINE_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DELAY"})
+        # StateMachine.add("DELAY", Delay(5), {"succeeded": "HOME"})
+        # StateMachine.add("HOME", drive_pose(1.2, 0.2, 90, 0.01, 1), {"succeeded": "RESET_ROBOT"})
 
     introspection_server = smach_ros.IntrospectionServer('smach_server', sm, '/SM_ROOT')
     introspection_server.start()
@@ -48,9 +48,9 @@ def build_pickup_left_ball_state():
     sm = StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("DRIVE_START_FORWARD", drive_pose(1.2, 0.73, 133, 0.2, 15), {"succeeded": "DRIVE_LEFT_FIELD"})
+        StateMachine.add("DRIVE_START_FORWARD", drive_pose(1.2, 0.73, 133, 0.3, 30), {"succeeded": "DRIVE_LEFT_FIELD"})
         StateMachine.add("DRIVE_LEFT_FIELD", drive_pose(1.04, 0.95, 133, 0.1, 5), {"succeeded": "GRAB_BALL"})
-        StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 0.4), {"succeeded": "DROP_BUCKET"})
+        StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 3), {"succeeded": "DROP_BUCKET"})
         StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 
@@ -58,11 +58,11 @@ def build_pickup_middle_right_balls_state():
     sm = StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("DRIVE_MIDDLE_FIELD", drive_pose(1.2, 1.6, -90, 0.01, 1), {"succeeded": "GRAB_BALL_MIDDLE"})
-        StateMachine.add("GRAB_BALL_MIDDLE", build_pickup_state("right_grabber", 9999), {"succeeded": "DRIVE_MIDDLE_FIELD_2"})
-        StateMachine.add("DRIVE_MIDDLE_FIELD_2", drive_pose(1.2, 1.6, -90, 0.01, 1), {"succeeded": "DRIVE_RIGHT_FIELD"})
-        StateMachine.add("DRIVE_RIGHT_FIELD", drive_pose(1.7, 1.6, -90, 0.01, 1), {"succeeded": "GRAB_BALL_RIGHT"})
-        StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("left_grabber", 9999), {"succeeded": "DROP_BUCKET"})
+        StateMachine.add("DRIVE_MIDDLE_FIELD", drive_pose(1.2, 1.63, -90, 0.10, 20), {"succeeded": "GRAB_BALL_MIDDLE"})
+        StateMachine.add("GRAB_BALL_MIDDLE", build_pickup_state("right_grabber", 3), {"succeeded": "DRIVE_MIDDLE_FIELD_2"})
+        StateMachine.add("DRIVE_MIDDLE_FIELD_2", drive_pose(1.2, 1.63, -90, 0.05, 5), {"succeeded": "DRIVE_RIGHT_FIELD"})
+        StateMachine.add("DRIVE_RIGHT_FIELD", drive_pose(1.7, 1.63, -90, 0.10, 20), {"succeeded": "GRAB_BALL_RIGHT"})
+        StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("left_grabber", 3), {"succeeded": "DROP_BUCKET"})
         StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 
@@ -70,20 +70,11 @@ def build_pickup_area_balls_state():
     sm = StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("DRIVE_MIDDLE_FIELD", drive_point(1.7, 1.2, 0.01), {"succeeded": "DRIVE_LEFT_FIELD"})
-        StateMachine.add("DRIVE_LEFT_FIELD", drive_point(0.3, 1.0, 0.01), {"succeeded": "DRIVE_BALL_PIT_FIELD_RIGHT"})
-        StateMachine.add("DRIVE_BALL_PIT_FIELD_RIGHT", drive_point(0.3, 0.7, 0.01), {"succeeded": "GRAB_BALL_RIGHT"})
-        StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("right_grabber", 9999), {"succeeded": "DRIVE_BALL_PIT_FIELD_LEFT"})
-        StateMachine.add("DRIVE_BALL_PIT_FIELD_LEFT", drive_point(0.3, 0.7, 0.01), {"succeeded": "GRAB_BALL_LEFT"})
-        StateMachine.add("GRAB_BALL_LEFT", build_pickup_state("left_grabber", 9999), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
-        StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_point(0.1, 1.8, 0.01), {"succeeded": "LIFT_LIFTER"})
-        StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET"})
-        StateMachine.add("DRIVE_LEFT_BUCKET", drive_point(0.1, 2.0, 0.01), {"succeeded": "OPEN_LEFT_GRABBER"})
-        StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "OPEN_RIGHT_GRABBER"})
-        StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_LOWER"})
-        StateMachine.add("DRIVE_LEFT_BUCKET_LOWER", drive_point(0.1, 1.8, 0.01), {"succeeded": "LOWER_LIFTER"})
-        StateMachine.add("LOWER_LIFTER", lower())
-    
+        StateMachine.add("DRIVE_BALL_AREA_FIELD", drive_pose(0.6, 1.0, -90, 0.1, 5), {"succeeded": "GRAB_BALL_RIGHT"})
+        StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("right_grabber", 3), {"succeeded": "DRIVE_BALL_AREA_FIELD_2"})
+        StateMachine.add("DRIVE_BALL_AREA_FIELD_2", drive_pose(0.6, 1.0, -90, 0.1, 5), {"succeeded": "GRAB_BALL_LEFT"})
+        StateMachine.add("GRAB_BALL_LEFT", build_pickup_state("left_grabber", 3), {"succeeded": "DROP_BUCKET"})
+        StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 
 if __name__ == "__main__":

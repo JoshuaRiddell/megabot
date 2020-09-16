@@ -25,15 +25,14 @@ def build_bucket_drop_state():
     sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("LINE_FRONT_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DELAY"})
-        StateMachine.add("DELAY", Delay(10), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
-        StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_pose(0.4, 1.8, 90, 0.2, 20), {"succeeded": "LIFT_LIFTER"})
+        StateMachine.add("DETECT_LINE", detect_line(), {"succeeded": "DRIVE_LEFT_BUCKET_FIELD"})
+        StateMachine.add("DRIVE_LEFT_BUCKET_FIELD", drive_pose(0.3, 1.8, 90, 0.5, 20), {"succeeded": "LIFT_LIFTER"})
         StateMachine.add("LIFT_LIFTER", lift(), {"succeeded": "DRIVE_LEFT_BUCKET"})
         StateMachine.add("DRIVE_LEFT_BUCKET", drive_pose(0.17, 1.99, 90, 0.01, 5), {"succeeded": "OPEN_LEFT_GRABBER"})
         StateMachine.add("OPEN_LEFT_GRABBER", release("left_grabber"), {"succeeded": "DRIVE_LEFT_BUCKET_TURN"})
         StateMachine.add("DRIVE_LEFT_BUCKET_TURN", drive_pose(0.17, 1.99, 117.5, 0.01, 5), {"succeeded": "OPEN_RIGHT_GRABBER"})
         StateMachine.add("OPEN_RIGHT_GRABBER", release("right_grabber"), {"succeeded": "LINE_FIELD"})
-        StateMachine.add("LINE_FIELD", drive_pose(0.7, 1.6, -90, 0.2, 10), {"succeeded": "LOWER_LIFTER"})
+        StateMachine.add("LINE_FIELD", drive_pose(0.6, 1.8, -90, 0.5, 90), {"succeeded": "LOWER_LIFTER"})
         StateMachine.add("LOWER_LIFTER", lower())
     return sm
 
@@ -75,22 +74,22 @@ def build_pickup_state(grabber_frame, distance_limit):
             goto_goal = GotoPointGoal()
             goto_goal.point = userdata.ball_location
             goto_goal.target_frame = "map"
-            goto_goal.reference_frame = data=frame
+            goto_goal.reference_frame = frame
             goto_goal.distance_threshold = distance_threshold
             return goto_goal
 
         StateMachine.add("DETECT_CLOSEST_BALL", build_ball_retry_state(grabber_frame, distance_limit),
                 {"succeeded": "DRIVE_BALL_STAGE"})
         StateMachine.add("DRIVE_BALL_STAGE", SimpleActionState('goto_point', GotoPointAction,
-                goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame + "_stage", 0.03),
-                input_keys=["ball_location"]),
+                    goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame + "_stage", 0.03),
+                    input_keys=["ball_location"]),
                 {"succeeded": "DRIVE_BALL"})
         StateMachine.add("DRIVE_BALL", SimpleActionState('goto_point', GotoPointAction,
-                goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame, 0.01),
-                input_keys=["ball_location"]),
+                    goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame, 0.01),
+                    input_keys=["ball_location"]),
                 {"succeeded": "CLOSE_GRABBER"})
         StateMachine.add("CLOSE_GRABBER", SimpleActionState('grab', GrabAction,
-                goal=GrabGoal(grabber_frame=grabber_frame, position=GrabGoal.CLOSE)),
+                    goal=GrabGoal(grabber_frame=grabber_frame, position=GrabGoal.CLOSE)),
                 {"succeeded": "succeeded"})
     return sm
 
@@ -141,6 +140,15 @@ def reset_localisation():
     request.rotation = Quaternion(*quat)
 
     return ServiceState('localisation/set_location', SetPosition, request=request)
+
+def detect_line():
+    sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
+
+    with sm:
+        StateMachine.add("LINE_FRONT_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DETECT_LINE"})
+        StateMachine.add("DETECT_LINE", Delay(10), {"succeeded": "succeeded"})
+
+    return sm
 
 def closest_ball(grabber_frame, distance_limit):
     return ServiceState('ball_map/closest', ClosestBall,
