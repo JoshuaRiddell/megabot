@@ -192,7 +192,7 @@ void GrabAction::executeCallback(const lifter_controller::GrabGoalConstPtr &goal
         }
     }
 
-    ros::Duration(0.5).sleep();
+    ros::Duration(0.25).sleep();
     actionServer.setSucceeded();
 }
 
