@@ -77,7 +77,7 @@ cv::Point get_mean_point(cv::Mat &img, std::vector<cv::Point> coordinates) {
 
     for (auto coordinate = coordinates.begin(); coordinate != coordinates.end(); ++coordinate) {
         if (coordinate->y > img.rows / 7 &&
-                coordinate->y < img.rows - img.rows / 2 &&
+                coordinate->y < img.rows - img.rows / 4 &&
                 coordinate->x > img.cols / 7 &&
                 coordinate->x < img.cols - img.cols / 7) {
             xSum += coordinate->x;
