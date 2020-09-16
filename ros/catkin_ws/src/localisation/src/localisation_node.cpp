@@ -239,7 +239,7 @@ int main(int argc, char **argv)
     tf2_ros::TransformBroadcaster transformBroadcaster;
     transformBroadcasterPtr = &transformBroadcaster;
 
-    LineCalibrationAction("line_calibration");
+    LineCalibrationAction lineCalibrationAction("line_calibration");
 
     ros::NodeHandle nh;
     ros::Rate r(10);

@@ -8,6 +8,7 @@ from tf.transformations import quaternion_from_euler
 from geometry_msgs.msg import Point, Quaternion
 from ball_mapper.srv import ClosestBall, ClosestBallRequest
 from localisation.srv import SetPosition, SetPositionRequest
+from localisation.msg import LineCalibrationAction, LineCalibrationGoal
 from smach_ros import ServiceState
 
 def build_reset_state():
@@ -139,14 +140,14 @@ def reset_localisation():
     quat = quaternion_from_euler(0, 0, numpy.radians(90))
     request.rotation = Quaternion(*quat)
 
-    return ServiceState('localisation/set_location', SetPosition, request=request)
+    return ServiceState('set_location', SetPosition, request=request)
 
 def detect_line():
     sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
 
     with sm:
         StateMachine.add("LINE_FRONT_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DETECT_LINE"})
-        StateMachine.add("DETECT_LINE", Delay(10), {"succeeded": "succeeded"})
+        StateMachine.add("DETECT_LINE", SimpleActionState('line_calibration', LineCalibrationAction), {"succeeded": "succeeded"})
 
     return sm
 
