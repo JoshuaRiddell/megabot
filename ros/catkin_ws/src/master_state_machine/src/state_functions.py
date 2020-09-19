@@ -41,10 +41,12 @@ def build_ball_timeout_state(grabber_frame, distance_limit, timeout):
     sm = Concurrence(outcomes=["succeeded", "timed_out"],
                     default_outcome="timed_out",
                     output_keys=["ball_location"],
-                    outcome_map={"succeeded":{"CLOSEST_BALL": "succeeded"}})
+                    outcome_map={"succeeded":{"CLOSEST_BALL": "succeeded"},
+                                "timed_out":{"TIMEOUT": "succeeded"}},
+                    child_termination_cb=lambda x: True)
 
     with sm:
-        Concurrence.add("CLOSEST_BALL", "",
+        Concurrence.add("CLOSEST_BALL", build_ball_retry_state(grabber_frame, distance_limit),
                         remapping={"position": "ball_location"})
         Concurrence.add("TIMEOUT", Delay(timeout))
     return sm
@@ -60,14 +62,26 @@ def build_ball_retry_state(grabber_frame, distance_limit):
 
 class Delay(State):
     def __init__(self, delay_time):
-        State.__init__(self, outcomes=["succeeded"])
+        State.__init__(self, outcomes=["succeeded", "preempted"])
         self.delay_time = delay_time
+        self.poll_interval = 0.01
+        self.interval_total = self.delay_time / self.poll_interval
 
     def execute(self, userdata):
-        time.sleep(self.delay_time)
-        return 'succeeded'
+        n = 0
 
-def build_pickup_state(grabber_frame, distance_limit):
+        while True:
+            time.sleep(self.poll_interval)
+
+            if self.delay_time > 0 and n >= self.interval_total:
+                return 'succeeded'
+            if self.preempt_requested():
+                self.service_preempt()
+                return 'preempted'
+            
+            n += 1
+
+def build_pickup_state(grabber_frame, distance_limit, timeout=-1):
     sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
 
     with sm:
@@ -79,8 +93,8 @@ def build_pickup_state(grabber_frame, distance_limit):
             goto_goal.distance_threshold = distance_threshold
             return goto_goal
 
-        StateMachine.add("DETECT_CLOSEST_BALL", build_ball_retry_state(grabber_frame, distance_limit),
-                {"succeeded": "DRIVE_BALL_STAGE"})
+        StateMachine.add("DETECT_CLOSEST_BALL", build_ball_timeout_state(grabber_frame, distance_limit, timeout),
+                {"succeeded": "DRIVE_BALL_STAGE", "timed_out": "aborted"})
         StateMachine.add("DRIVE_BALL_STAGE", SimpleActionState('goto_point', GotoPointAction,
                     goal_cb=lambda userdata, goal: drive_ball_goal_cb(userdata, goal, grabber_frame + "_stage", 0.03),
                     input_keys=["ball_location"]),
@@ -147,7 +161,10 @@ def detect_line():
 
     with sm:
         StateMachine.add("LINE_FRONT_FIELD", drive_pose(0.661, 0.833, 90, 0.01, 1), {"succeeded": "DETECT_LINE"})
-        StateMachine.add("DETECT_LINE", SimpleActionState('line_calibration', LineCalibrationAction), {"succeeded": "succeeded"})
+        StateMachine.add("DETECT_LINE", SimpleActionState('line_calibration', LineCalibrationAction), {
+                            "succeeded": "succeeded",
+                            "preempted":"succeeded",
+                            "aborted":"succeeded"})
 
     return sm
 

@@ -1,0 +1,22 @@
+#!/usr/bin/env python
+
+import rospy
+import smach_ros
+from smach import StateMachine
+from state_functions import *
+
+def main():
+    rospy.init_node('master_state_machine')
+
+    sm = StateMachine(outcomes=["succeeded", "preempted", "aborted"])
+
+    with sm:
+        StateMachine.add("DETECT_BALL", build_ball_timeout_state("left_grabber", 1, 5), {"succeeded": "succeeded", "timed_out": "aborted"})
+
+    introspection_server = smach_ros.IntrospectionServer('smach_server', sm, '/SM_ROOT')
+    introspection_server.start()
+    sm.execute()
+    introspection_server.stop()
+
+if __name__ == "__main__":
+    main()
