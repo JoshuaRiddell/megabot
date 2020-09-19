@@ -83,7 +83,7 @@
     </visual>
   </link>
   <joint name="right_grabber_joint" type="fixed">
-    <origin xyz="0.231 -0.059 0.03" rpy="0 0 0" />
+    <origin xyz="0.221 -0.059 0.03" rpy="0 0 0" />
     <parent link="base_footprint"/>
     <child link="right_grabber" />
   </joint>
@@ -123,7 +123,7 @@
     </visual>
   </link>
   <joint name="left_grabber_joint" type="fixed">
-    <origin xyz="0.231 0.059 0.03" rpy="0 0 0" />
+    <origin xyz="0.221 0.059 0.03" rpy="0 0 0" />
     <parent link="base_footprint"/>
     <child link="left_grabber" />
   </joint>

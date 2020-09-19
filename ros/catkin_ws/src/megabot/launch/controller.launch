@@ -1,6 +1,6 @@
 <launch>
     <group ns="megabot">
-        <machine name="pi" address="192.168.0.100" user="megabot" env-loader="/home/megabot/.rosenv"/>
+        <machine name="pi" address="192.168.1.100" user="megabot" env-loader="/home/megabot/.rosenv"/>
         <node pkg="master_state_machine" type="master_state_machine_node" name="master_state_machine" output="screen"/>
         <node pkg="localisation" type="localisation_node" name="localisation"/>
         <node pkg="base_controller" type="base_controller_node" name="base_controller"/>
