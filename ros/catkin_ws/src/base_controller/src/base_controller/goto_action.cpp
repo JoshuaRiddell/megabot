@@ -4,12 +4,13 @@
 
 #define LOOP_RATE 20
 
+ecl::Semaphore semaphore("goto_action");
+
 GotoAction::GotoAction()
     : tfListener(tfBuffer),
       loopRate(LOOP_RATE),
       distanceThreshold(0.01),
-      rotationThreshold(0.05),
-      semaphore("goto_action")
+      rotationThreshold(0.05)
 {
     double loopPeriod = 1. / LOOP_RATE;
 

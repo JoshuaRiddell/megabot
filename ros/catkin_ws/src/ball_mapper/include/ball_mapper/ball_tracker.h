@@ -7,7 +7,7 @@ public:
     BallTracker(ros::Time stamp,
                 tf2::Vector3 initial_sample,
                 std::string frame_id = "map",
-                int max_samples = 30,
+                int max_samples = 10,
                 int num_samples_valid_threshold = 5,
                 double samples_distance_valid_threshold = 0.03,
                 double expiry_timeout = 0.5);

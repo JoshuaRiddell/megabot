@@ -50,7 +50,7 @@ def build_pickup_left_ball_state():
     with sm:
         StateMachine.add("DRIVE_START_FORWARD", drive_pose(1.2, 0.73, 133, 0.3, 30), {"succeeded": "DRIVE_LEFT_FIELD"})
         StateMachine.add("DRIVE_LEFT_FIELD", drive_pose(1.04, 0.95, 133, 0.05, 5), {"succeeded": "GRAB_BALL"})
-        StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 3, 3), {"succeeded": "DROP_BUCKET"})
+        StateMachine.add("GRAB_BALL", build_pickup_state("left_grabber", 3, 3), {"succeeded": "DROP_BUCKET", "aborted": "DROP_BUCKET"})
         StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 
@@ -58,11 +58,11 @@ def build_pickup_middle_right_balls_state():
     sm = StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("DRIVE_MIDDLE_FIELD", drive_pose(1.2, 1.63, -90, 0.03, 20), {"succeeded": "GRAB_BALL_MIDDLE"})
-        StateMachine.add("GRAB_BALL_MIDDLE", build_pickup_state("right_grabber", 3, 3), {"succeeded": "DRIVE_MIDDLE_FIELD_2"})
-        StateMachine.add("DRIVE_MIDDLE_FIELD_2", drive_pose(1.2, 1.63, -90, 0.05, 5), {"succeeded": "DRIVE_RIGHT_FIELD"})
-        StateMachine.add("DRIVE_RIGHT_FIELD", drive_pose(1.7, 1.63, -90, 0.03, 20), {"succeeded": "GRAB_BALL_RIGHT"})
-        StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("left_grabber", 3, 3), {"succeeded": "DROP_BUCKET"})
+        StateMachine.add("DRIVE_MIDDLE_FIELD", drive_pose(1.2, 1.55, -90, 0.03, 20), {"succeeded": "GRAB_BALL_MIDDLE"})
+        StateMachine.add("GRAB_BALL_MIDDLE", build_pickup_state("right_grabber", 3, 3), {"succeeded": "DRIVE_MIDDLE_FIELD_2", "aborted": "DRIVE_MIDDLE_FIELD_2"})
+        StateMachine.add("DRIVE_MIDDLE_FIELD_2", drive_pose(1.2, 1.55, -90, 0.05, 5), {"succeeded": "DRIVE_RIGHT_FIELD"})
+        StateMachine.add("DRIVE_RIGHT_FIELD", drive_pose(1.7, 1.55, -90, 0.03, 20), {"succeeded": "GRAB_BALL_RIGHT"})
+        StateMachine.add("GRAB_BALL_RIGHT", build_pickup_state("left_grabber", 3, 3), {"succeeded": "DROP_BUCKET", "aborted": "DROP_BUCKET"})
         StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm
 
@@ -70,19 +70,27 @@ def build_pickup_area_balls_state():
     sm = StateMachine(outcomes = ["succeeded", "preempted", "aborted"])
 
     with sm:
-        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_1", drive_pose(0.495, 1.095, -90, 0.05, 5), {"succeeded": "GRAB_BALL_RIGHT_1"})
-        StateMachine.add("GRAB_BALL_RIGHT_1", build_pickup_state("right_grabber", 0.25, 1), {"succeeded": "GRAB_BALL_LEFT_1", "aborted": "BALL_AREA_VERTICAL_RIGHT_2"})
-        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_2", drive_pose(0.495, 0.855, -90, 0.05, 5), {"succeeded": "GRAB_BALL_RIGHT_2"})
-        StateMachine.add("GRAB_BALL_RIGHT_2", build_pickup_state("right_grabber", 0.25, 1), {"succeeded": "GRAB_BALL_LEFT_2", "aborted": "BALL_AREA_VERTICAL_RIGHT_3"})
-        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_3", drive_pose(0.495, 0.608, -90, 0.05, 5), {"succeeded": "GRAB_BALL_RIGHT_3"})
-        StateMachine.add("GRAB_BALL_RIGHT_3", build_pickup_state("right_grabber", 0.25, 1), {"succeeded": "GRAB_BALL_LEFT_3", "aborted": "BALL_AREA_VERTICAL_RIGHT_1"})
+        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_1", drive_pose(0.45, 1.095, -90, 0.03, 5), {"succeeded": "GRAB_BALL_RIGHT_1"})
+        StateMachine.add("GRAB_BALL_RIGHT_1", build_pickup_state("right_grabber", 0.25, 1), {"succeeded": "BALL_AREA_VERTICAL_LEFT_1", "aborted": "BALL_AREA_VERTICAL_RIGHT_2"})
+        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_2", drive_pose(0.45, 0.855, -90, 0.03, 5), {"succeeded": "GRAB_BALL_RIGHT_2"})
+        StateMachine.add("GRAB_BALL_RIGHT_2", build_pickup_state("right_grabber", 0.25, 1), {"succeeded": "BALL_AREA_VERTICAL_LEFT_2", "aborted": "BALL_AREA_VERTICAL_RIGHT_3"})
+        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_3", drive_pose(0.45, 0.608, -90, 0.03, 5), {"succeeded": "GRAB_BALL_RIGHT_3"})
+        StateMachine.add("GRAB_BALL_RIGHT_3", build_pickup_state("right_grabber", 0.25, 1), {"succeeded": "BALL_AREA_VERTICAL_LEFT_3", "aborted": "BALL_AREA_VERTICAL_RIGHT_4"})
+        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_4", drive_pose(0.45, 0.608, -180, 0.03, 5), {"succeeded": "GRAB_BALL_RIGHT_4"})
+        StateMachine.add("GRAB_BALL_RIGHT_4", build_pickup_state("right_grabber", 0.3, 1), {"succeeded": "BALL_AREA_VERTICAL_LEFT_4", "aborted": "BALL_AREA_VERTICAL_RIGHT_5"})
+        StateMachine.add("BALL_AREA_VERTICAL_RIGHT_5", drive_pose(0.45, 0.35, -180, 0.03, 5), {"succeeded": "GRAB_BALL_RIGHT_5"})
+        StateMachine.add("GRAB_BALL_RIGHT_5", build_pickup_state("right_grabber", 0.3, 1), {"succeeded": "BALL_AREA_VERTICAL_LEFT_5", "aborted": "BALL_AREA_VERTICAL_RIGHT_1"})
 
-        StateMachine.add("BALL_AREA_VERTICAL_LEFT_1", drive_pose(0.495, 1.095, -90, 0.05, 5), {"succeeded": "GRAB_BALL_LEFT_1"})
+        StateMachine.add("BALL_AREA_VERTICAL_LEFT_1", drive_pose(0.45, 1.095, -90, 0.03, 5), {"succeeded": "GRAB_BALL_LEFT_1"})
         StateMachine.add("GRAB_BALL_LEFT_1", build_pickup_state("left_grabber", 0.25, 1), {"succeeded": "DROP_BUCKET", "aborted": "BALL_AREA_VERTICAL_LEFT_2"})
-        StateMachine.add("BALL_AREA_VERTICAL_LEFT_2", drive_pose(0.495, 0.855, -90, 0.05, 5), {"succeeded": "GRAB_BALL_LEFT_2"})
+        StateMachine.add("BALL_AREA_VERTICAL_LEFT_2", drive_pose(0.45, 0.855, -90, 0.03, 5), {"succeeded": "GRAB_BALL_LEFT_2"})
         StateMachine.add("GRAB_BALL_LEFT_2", build_pickup_state("left_grabber", 0.25, 1), {"succeeded": "DROP_BUCKET", "aborted": "BALL_AREA_VERTICAL_LEFT_3"})
-        StateMachine.add("BALL_AREA_VERTICAL_LEFT_3", drive_pose(0.495, 0.608, -90, 0.05, 5), {"succeeded": "GRAB_BALL_LEFT_3"})
-        StateMachine.add("GRAB_BALL_LEFT_3", build_pickup_state("left_grabber", 0.25, 1), {"succeeded": "DROP_BUCKET", "aborted": "BALL_AREA_VERTICAL_LEFT_1"})
+        StateMachine.add("BALL_AREA_VERTICAL_LEFT_3", drive_pose(0.45, 0.608, -90, 0.03, 5), {"succeeded": "GRAB_BALL_LEFT_3"})
+        StateMachine.add("GRAB_BALL_LEFT_3", build_pickup_state("left_grabber", 0.25, 1), {"succeeded": "DROP_BUCKET", "aborted": "BALL_AREA_VERTICAL_LEFT_4"})
+        StateMachine.add("BALL_AREA_VERTICAL_LEFT_4", drive_pose(0.45, 0.608, -180, 0.03, 5), {"succeeded": "GRAB_BALL_LEFT_4"})
+        StateMachine.add("GRAB_BALL_LEFT_4", build_pickup_state("left_grabber", 0.3, 1), {"succeeded": "DROP_BUCKET", "aborted": "BALL_AREA_VERTICAL_LEFT_5"})
+        StateMachine.add("BALL_AREA_VERTICAL_LEFT_5", drive_pose(0.45, 0.35, -180, 0.03, 5), {"succeeded": "GRAB_BALL_LEFT_5"})
+        StateMachine.add("GRAB_BALL_LEFT_5", build_pickup_state("left_grabber", 0.3, 1), {"succeeded": "DROP_BUCKET", "aborted": "BALL_AREA_VERTICAL_LEFT_1"})
 
         StateMachine.add("DROP_BUCKET", build_bucket_drop_state())
     return sm

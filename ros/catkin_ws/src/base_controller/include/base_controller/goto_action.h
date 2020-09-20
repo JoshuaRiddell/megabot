@@ -72,7 +72,5 @@ private:
     double rotationThreshold;
 
     ros::Rate loopRate;
-
-    ecl::Semaphore semaphore;
 };
 

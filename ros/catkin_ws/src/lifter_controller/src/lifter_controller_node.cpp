@@ -1,6 +1,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Int8.h>
 #include <std_msgs/Int16.h>
+#include <std_msgs/String.h>
 #include <dynamic_reconfigure/server.h>
 #include <lifter_controller/LifterConfig.h>
 #include <lifter_controller.h>
@@ -218,8 +219,27 @@ int main(int argc, char **argv)
     stepperPub = nh.advertise<std_msgs::Int16>("lifter/stepper", 1, true);
     servoLeftPub = nh.advertise<std_msgs::Int16>("lifter/servo_left", 1, true);
     servoRightPub = nh.advertise<std_msgs::Int16>("lifter/servo_right", 1, true);
+    ros::Publisher messagePub = nh.advertise<std_msgs::String>("display", 1, true);
+    std_msgs::String message;
 
-    ros::spin();
+    int pollFrequency = 10;
+    ros::Rate rate(pollFrequency);
+    int messageRate = 1;
+    int decimation = messageRate * pollFrequency;
+
+    int i = 0;
+    while (ros::ok()) {
+        ros::spinOnce();
+
+        if (++i % decimation == 0) {
+            std::stringstream sstr;
+            sstr << "Alive: " << i/pollFrequency;
+            message.data = sstr.str();
+            messagePub.publish(message);
+        }
+
+        rate.sleep();
+    }
 
     return 0;
 }

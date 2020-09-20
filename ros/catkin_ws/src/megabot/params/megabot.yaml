@@ -30,16 +30,16 @@ ball_locator:
   v_high: 255
   v_low: 18
 base_controller:
-  angle_speed_curve_acceleration: 1.683
-  angle_speed_curve_distance_coefficient: 0.686
+  angle_speed_curve_acceleration: 1.584
+  angle_speed_curve_distance_coefficient: 0.49
   angle_speed_curve_distance_deadband: 0.01
-  angle_speed_curve_max_speed: 1.089
+  angle_speed_curve_max_speed: 1.3860000000000001
   angle_speed_curve_min_speed: 0.05
   translation_acceleration_limiter_max_acceleration: 4.998
-  translation_speed_curve_acceleration: 1.5190000000000001
-  translation_speed_curve_distance_coefficient: 0.539
-  translation_speed_curve_distance_deadband: 0.01
-  translation_speed_curve_max_speed: 0.931
+  translation_speed_curve_acceleration: 1.47
+  translation_speed_curve_distance_coefficient: 0.49
+  translation_speed_curve_distance_deadband: 0.015
+  translation_speed_curve_max_speed: 1.274
   translation_speed_curve_min_speed: 0.05
 camera:
   auto_white_balance: false
@@ -48,7 +48,7 @@ camera:
   camera_name: camera
   debayer:
     debayer: 0
-  exposure: 1200
+  exposure: 300
   framerate: 10
   gain: 0
   image_color:
@@ -371,16 +371,16 @@ line:
       quality: 31
       target_bitrate: 800000
 line_locator:
-  area_high: 6000.0
-  area_low: 600.0
+  area_high: 12000.0
+  area_low: 0.0
   circularity_high: 1.0
   circularity_low: 0.0
   h_high: 255
   h_low: 0
-  s_high: 178
+  s_high: 255
   s_low: 0
   v_high: 255
-  v_low: 76
+  v_low: 179
 localisation:
   line_angle_deg: 118.1
   line_x: 0.6620000000000003

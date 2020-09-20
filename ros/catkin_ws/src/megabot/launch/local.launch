@@ -1,0 +1,49 @@
+<launch>
+    <node name="map_server" pkg="map_server" type="map_server" args="$(find megabot)/map/map.yaml" respawn="true" />
+    <param name="ball_description" command="cat $(find megabot)/urdf/tennis_ball.urdf"/>
+
+    <group ns="megabot">
+        <rosparam command="load" file="$(find megabot)/params/megabot.yaml"/>
+        <param name="description" command="$(find xacro)/xacro $(find megabot)/urdf/megabot.urdf.xacro"/>
+
+        <node name="camera" pkg="usb_cam" type="usb_cam_node" >
+            <param name="video_device" value="/dev/video0" />
+            <param name="image_width" value="432" />
+            <param name="image_height" value="240" />
+            <param name="pixel_format" value="yuyv" />
+            <param name="camera_frame_id" value="camera_link" />
+            <param name="camera_name" value="camera"/>
+            <param name="io_method" value="mmap"/>
+            <param name="framerate" value="10"/>
+            <param name="autoexposure" value="false"/>
+            <param name="exposure" value="1200"/>
+            <!-- <param name="exposure" value="2000"/> -->
+            <!-- <param name="auto_white_balance" value="false"/> -->
+            <!-- <param name="white_balance" value="4000"/> -->
+        </node>
+        
+        <node pkg="image_proc" type="image_proc" name="image_proc_camera" ns="camera" respawn="true"/>
+
+        <node pkg="rosserial_server" type="serial_node" name="rosserial_server_base" respawn="true">
+            <param name="port" value="/dev/ttyAMA4" />
+        </node>
+        <node pkg="rosserial_server" type="serial_node" name="rosserial_server_lifter" respawn="true">
+            <param name="port" value="/dev/ttyAMA1" />
+        </node>
+        <node pkg="lifter_controller" type="lifter_controller_node" name="lifter_controller" respawn="true"/>
+
+        <node pkg="ball_locator" type="ball_locator_node" name="ball_locator" respawn="true"/>
+        <node name="ball_mapper" pkg="ball_mapper" type="ball_mapper_node" respawn="true"/>
+
+        <node pkg="line_locator" type="line_locator_node" name="line_locator" respawn="true"/>
+
+        <node pkg="robot_state_publisher" type="robot_state_publisher" name="rob_state_publisher" respawn="true">
+            <remap from="robot_description" to="description" />
+            <remap from="joint_states" to="joint_states" />
+        </node>
+
+        <node pkg="master_state_machine" type="master_state_machine_node" name="master_state_machine" output="screen" respawn="true"/>
+        <node pkg="localisation" type="localisation_node" name="localisation" respawn="true"/>
+        <node pkg="base_controller" type="base_controller_node" name="base_controller" respawn="true"/>
+    </group>    
+</launch>
